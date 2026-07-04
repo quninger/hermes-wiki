@@ -1,159 +1,112 @@
 ---
-workflow:
-  id: WF-07
-  name: GitHub 同步
-  version: "1.0"
-  category: 版本管理
-  status: 活跃
-archive:
-  location: N/A（Git 仓库即归档）
-  naming: 遵循 Git 提交规范
-  retention: 永久（Git 历史）
-github:
-  repo: hermes-wiki
-  branch: main
-  path: 04-Resource/工作流/WF-07-GitHub同步.md
-privacy:
-  level: 公开
-  contains: Git 操作流程、提交规范、分支策略
+title: "WF-07 GitHub 同步"
+created: 2026-07-04
+type: workflow-detail
+tags: [workflow, 同步, GitHub]
 ---
 
-# WF-07 GitHub 同步工作流
+# WF-07 GitHub 同步
 
-## 目的
+## 概述
+本地知识库与 GitHub 仓库保持同步，支持版本追溯和多设备协作。
 
-将本地 Wiki 知识库与 GitHub 仓库保持同步，确保内容安全备份、版本可追溯、支持多设备协作。
+## 数据来源
+无外部数据来源，操作对象为本地 git 仓库。
 
-## 触发条件
+## 输出模板
+无固定模板，使用 git 命令操作。
 
-- 完成重要文档更新后
-- 新增或修改工作流/技能文件后
-- 每日工作结束时（如有变更）
-- 用户主动要求同步时
+## 版本控制规则
+
+| 状态 | 含义 | 目录 |
+|------|------|------|
+| ✅ 推送 | commit + push | `01-Daily/`, `02-Project/`, `03-Knowledge/`, `04-Resource/` |
+| 🔒 本地提交 | commit 不 push | `00-Inbox/`, `98-Archive/` |
+| ❌ 不提交 | 仅本地文件 | `99-Assets/`, `.obsidian/`, `.hermes/` |
+
+**pre-push hook** 自动阻止推送 `00-Inbox/` 和 `98-Archive/` 内容。
 
 ## 执行步骤
 
-### 步骤 1：检查状态
-
-1. 进入工作目录：
-   ```bash
-   cd /e/工作需要/hermes-wiki
-   ```
-2. 检查 Git 状态：
-   ```bash
-   git status
-   ```
-3. 确认：
-   - 有哪些文件被修改/新增/删除
-   - 是否有未跟踪的文件需要添加
-   - 当前分支是否正确（应为 main）
-
-### 步骤 2：暂存变更
-
-1. 添加所有变更：
-   ```bash
-   git add -A
-   ```
-2. 或选择性添加：
-   ```bash
-   git add <具体文件路径>
-   ```
-3. 确认暂存内容：
-   ```bash
-   git status
-   ```
-
-### 步骤 3：提交变更
-
-使用 Conventional Commits 格式：
+### 日常同步（推荐）
 
 ```bash
-git commit -m "type(scope): 简短描述
+cd E:/工作需要/hermes-wiki
 
-详细说明（可选）"
+# 1. 开始前：拉取远程最新
+git pull origin master
+
+# 2. 工作中：频繁 commit
+git add -A && git commit -m "feat: xxx"
+
+# 3. 结束时：push 到远程
+git push origin master
 ```
 
-**类型说明**：
-- `feat`: 新功能/新内容
-- `fix`: 修复错误
-- `docs`: 文档更新
-- `refactor`: 重构/整理
-- `chore`: 杂项维护
-
-**示例**：
-```bash
-git commit -m "docs(工作流): 新增 GitHub 同步工作流文档"
-git commit -m "feat(知识库): 添加项目管理知识体系"
-git commit -m "fix(模板): 修复复盘模板格式问题"
-```
-
-### 步骤 4：拉取远程更新
-
-1. 先拉取远程变更（避免冲突）：
-   ```bash
-   git pull origin main
-   ```
-2. 如有冲突，解决后重新提交：
-   ```bash
-   # 解决冲突文件
-   git add <冲突文件>
-   git commit -m "fix: 解决合并冲突"
-   ```
-
-### 步骤 5：推送到远程
-
-1. 推送到 GitHub：
-   ```bash
-   git push origin main
-   ```
-2. 确认推送成功：
-   ```bash
-   git log --oneline -5
-   ```
-
-### 步骤 6：验证同步
-
-1. 检查 GitHub 仓库页面确认更新
-2. 验证关键文件内容正确
-
-## 完整同步命令序列
+### 完整流程
 
 ```bash
-# 进入目录
-cd /e/工作需要/hermes-wiki
-
-# 检查状态
+# 1. 检查状态
 git status
 
-# 添加所有变更
+# 2. 拉取远程（避免冲突）
+git pull --rebase origin master
+
+# 3. 添加变更
 git add -A
 
-# 提交（替换为实际描述）
-git commit -m "docs: 同步本周知识库更新"
+# 4. 提交（Conventional Commits）
+git commit -m "feat(scope): 描述"
 
-# 拉取并推送
-git pull origin main && git push origin main
+# 5. 推送（pre-push hook 自动过滤隐私内容）
+git push origin master
+
+# 6. 验证
+git log --oneline -5
 ```
 
-## 模板路径
+### 冲突处理
+
+```bash
+# 方式1：变基到最新（推荐）
+git pull --rebase origin master
+
+# 方式2：合并
+git pull origin master
+
+# 解决冲突后
+git add <冲突文件>
+git commit -m "fix: 解决合并冲突"
+git push origin master
+```
+
+### 紧急推送（跳过 hook）
+
+```bash
+git push --no-verify  # 跳过 pre-push hook
+```
+
+## 提交规范（Conventional Commits）
 
 ```
-N/A（使用 Git 原生操作）
+type(scope): 描述
+
+类型:
+- feat: 新功能/新内容
+- fix: 修复错误
+- docs: 文档更新
+- refactor: 重构/整理
+- chore: 杂项维护
 ```
 
-## 归档路径
-
+示例：
+```bash
+git commit -m "docs(工作流): 新增科技消息推送流程"
+git commit -m "feat(知识库): 添加 WF-13 科技早报"
+git commit -m "fix(模板): 修复归档模板格式"
 ```
-GitHub 仓库：hermes-wiki
-本地路径：E:\工作需要\hermes-wiki
-```
 
-## 注意事项
-
-- **提交频率**：小批量多次提交优于大批量少次提交
-- **提交信息**：遵循 Conventional Commits，便于生成 changelog
-- **冲突处理**：推送前先拉取，及时解决冲突
-- **敏感信息**：确保不提交密码、密钥等敏感数据（检查 .gitignore）
-- **大文件**：避免提交大型二进制文件，使用 Git LFS 如有需要
-- **分支策略**：主分支保持稳定，实验性内容在特性分支进行
-- **备份意识**：GitHub 是备份之一，重要内容建议多重备份
+## 关联文件
+- Hook: `.git/hooks/pre-push`
+- 规则: `.gitignore`
+- 文档: `03-Knowledge/workflows.md`

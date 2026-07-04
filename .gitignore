@@ -19,10 +19,6 @@ Desktop.ini
 *.7z
 *.tar.gz
 
-# === 图片 ==
-# 超过 1MB 的图片将被 pre-commit hook 拦截
-# *.jpg, *.png 等按需取消注释
-
 # === Python ===
 __pycache__/
 *.pyc
@@ -47,14 +43,8 @@ node_modules/
 # === Hermes 内部 ===
 .hermes/
 
-# === 附件资源 ===
+# === 附件资源（不提交） ===
 99-Assets/
-
-# === 归档库（隐私） ===
-98-Archive/
-
-# === 收件箱（可能含隐私） ===
-00-Inbox/
 
 # === webui 密钥 ===
 .webui_secret_key
@@ -63,8 +53,10 @@ node_modules/
 zhejiang-railway-*/
 xiaohongshu-hot/
 
-# === 旧版文件 ===
-
 # === [github_forbid] 不归档/不推送文件 ===
-# 不需要归档的任务文件加此前缀，git 自动忽略
-[github_forbid]*
+# 文件名以 [github_forbid] 开头的不提交不推送
+\[github_forbid\]*
+
+# === 说明 ===
+# 00-Inbox/ 和 98-Archive/ 已从 .gitignore 移除
+# 可本地 commit 保留追溯，通过 pre-push hook 阻止推送
