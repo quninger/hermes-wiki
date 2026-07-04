@@ -470,7 +470,7 @@ const TASKS = [
         type: '每日日志',
         wf: 'WF-01',
         archive: '01-Daily/',
-        pushGitHub: true,
+        pushGitHub: false,
         archiveNeeded: true,
         planModel: 'glm',
         execModel: 'deepseek',
@@ -807,6 +807,11 @@ async function runTask(task) {
     // ── Phase 2: 大模型执行 ──
     setPhase('⚡ 大模型执行中…', 'running');
     addLog(`[执行] 大模型 ${task.execModel} 接手任务`, 'exec');
+
+    // 不归档任务 → [github_forbid] 命名提示
+    if (!task.archiveNeeded) {
+        addLog(`[执行] 不归档任务 → 文件名前缀 [github_forbid]`, 'path');
+    }
 
     // Activate exec model
     await sleep(400);

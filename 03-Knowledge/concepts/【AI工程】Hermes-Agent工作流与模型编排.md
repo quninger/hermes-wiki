@@ -5,6 +5,10 @@ updated: 2026-07-04
 type: concept
 tags: [hermes, workflow, model-orchestration, ai-agent, 核心]
 sources: [SOUL.md, 03-Knowledge/workflows.md]
+workflow: WF-03
+archive: true
+github: allow
+privacy: false
 ---
 
 # 🤖 Hermes Agent 工作流与模型编排

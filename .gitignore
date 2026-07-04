@@ -64,4 +64,7 @@ zhejiang-railway-*/
 xiaohongshu-hot/
 
 # === 旧版文件 ===
-({name
+
+# === [github_forbid] 不归档/不推送文件 ===
+# 不需要归档的任务文件加此前缀，git 自动忽略
+[github_forbid]*

@@ -23,6 +23,41 @@ sources: [raw/articles/来源文件名.md]
 ---
 ```
 
+### 4维度 Frontmatter（强制）
+
+每篇归档笔记必须标记以下4个维度：
+
+```yaml
+---
+workflow: WF-xx          # 所属工作流（如 WF-03、WF-09）
+archive: true | false    # 是否需要本地归档
+github: allow | forbid | na  # GitHub 推送策略
+privacy: true | false    # 是否含隐私内容
+---
+```
+
+**示例 — 技术调研笔记：**
+```yaml
+---
+title: "Vue3 vs React 2026 生态对比"
+workflow: WF-09
+archive: true
+github: allow
+privacy: false
+---
+```
+
+**示例 — 临时编码文件（不归档不推送）：**
+```yaml
+---
+title: "[github_forbid] 临时调试脚本"
+workflow: WF-11
+archive: false
+github: forbid
+privacy: false
+---
+```
+
 ## Tag Taxonomy
 - 框架: langchain, langgraph, crewai, autogen, hermes
 - 模型: gpt, claude, deepseek, qwen, llama

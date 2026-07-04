@@ -31,3 +31,12 @@
 - 完整演示：小模型规划→大模型执行→4步工作流闭环
 - 可视化模型链路由 + 实时执行日志 + 归档路径动画
 - 10种预设任务覆盖全部12个WF工作流
+
+## [2026-07-04] update | 4维度重构 + [github_forbid] 规则
+- 工作流表从6列精简为4维度：名称 | 类型 | 归档 | GitHub
+- 修正：每日日志→❌不推送，月度复盘→❌不推送，GitHub同步→按需
+- 新增 SCHEMA.md 4维度 Frontmatter 强制规范（workflow/archive/github/privacy）
+- 新增 `.gitignore` 规则 `[github_forbid]*` 自动忽略不归档文件
+- 新增 workflows.md [github_forbid] 文件命名规则章节
+- 现有知识笔记全部添加4维度 Frontmatter
+- Workflow Commander 同步：12个任务全部含 pushGitHub/archiveNeeded 字段
