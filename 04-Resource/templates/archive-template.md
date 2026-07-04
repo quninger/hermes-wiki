@@ -1,41 +1,29 @@
 ---
-title: "{{date:YYYY-MM-DD}} 会话归档"
-created: {{date:YYYY-MM-DD}}
+title: "{{date:YYYY-MM-DD}} {{session_title}}"
+created: {{date:YYYY-MM-DD}}T{{time:HH:mm}}
+updated: {{date:YYYY-MM-DD}}T{{time:HH:mm}}
 type: archive
-tags: [archive, 会话]
+session: "{{session_title}}"
+last_archived: {{date:YYYY-MM-DD}}T{{time:HH:mm}}
 ---
 
-# {{date:YYYY-MM-DD}} 会话归档
+# {{date:YYYY-MM-DD}} {{session_title}}
 
-## 📋 归档范围
-- 来源: 01-Daily / 00-Inbox / 项目文档
-- 时间范围: {{date:YYYY-MM-DD|days:-7}} ~ {{date:YYYY-MM-DD}}
+## 归档规则
 
-## 📝 归档内容
+- 每个 Hermes 会话 = 一个独立归档文件
+- 文件名：`YYYY-MM-DD 会话标题.md`
+- 通过 `last_archived` 时间戳去重，只归档新内容
+- 格式：问题 → 解决方案 → 解决效果
+- 每条带时间戳，按时间排序
+- 子会话 ≤500 字
 
-### 会话 1: [主题]
-- **问题**: 
-- **解决方案**: 
-- **结果**: 
+## 归档 1: [子话题]
 
-### 会话 2: [主题]
-- **问题**: 
-- **解决方案**: 
-- **结果**: 
-
-## 📊 归档统计
-| 类型 | 数量 | 备注 |
-|------|------|------|
-| 知识类 |  | 保留要点 |
-| 任务类 |  | 记录结果 |
-| 临时类 |  | 可删除 |
-
-## 🔍 待处理
-- [ ] 
-
-## 🔗 关联归档
-- [[]]
+**问题**: 
+**方案**: 
+**效果**: 
+**时间**: {{date:YYYY-MM-DD}} {{time:HH:mm}}
 
 ---
-> 归档时间: {{time:HH:mm}}
-> 字数压缩: 单篇 ≤1000 字
+> 更新: {{date:YYYY-MM-DD}}T{{time:HH:mm}}
