@@ -232,6 +232,11 @@
         }
         .wf-step.done .step-detail, .wf-step.active .step-detail { max-height: 80px; }
 
+        /* ── Clickable wf-step ── */
+        .wf-step { cursor: pointer; }
+        .wf-step:hover { border-color: #2a2d3a !important; }
+        .wf-step.expanded .step-detail { max-height: 150px !important; }
+
         /* Score */
         .score-badge {
             display: inline-flex; align-items: center; gap: 0.3rem;
@@ -395,6 +400,15 @@
         Workflow Commander · Hermes Agent Workflow Simulator<br>
         小模型规划 → 大模型执行 → 工作流闭环 · 模拟演示
     </footer>
+</div>
+
+<!-- ═══ Modal Overlay ═══ -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+        <button class="modal-close" id="modalClose">✕</button>
+        <h3 id="modalTitle">详情</h3>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
 </div>
 
 <script>
@@ -621,10 +635,21 @@ function getTs() {
 function addLog(text, cls = 'info') {
     const line = document.createElement('div');
     line.className = `log-line ${cls}`;
-    line.innerHTML = `<span class="ts">[${getTs()}]</span> <span class="${cls}">${text}</span>`;
+    const ts = getTs();
+    line.innerHTML = `<span class="ts">[${ts}]</span> <span class="${cls}">${text}</span><div class="log-detail"><span style="color:#4a4d5e;">时间戳: ${ts} | 类型: ${cls}</span></div>`;
+    // Click to expand detail
+    line.addEventListener('click', (e) => {
+        e.stopPropagation();
+        line.classList.toggle('expanded');
+        // Open modal on double-click
+    });
+    line.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        showLogModal(text, cls, ts);
+    });
     logArea.appendChild(line);
     logArea.scrollTop = logArea.scrollHeight;
-    state.logs.push({ text, cls });
+    state.logs.push({ text, cls, ts });
     logCount.textContent = `${state.logs.length} 条`;
     // Remove placeholder if first log
     const ph = logArea.querySelector('div[style*="text-align:center"]');
@@ -948,6 +973,126 @@ btnReset.addEventListener('click', () => {
     btnReset.disabled = false;
     state.phase = 'idle';
 });
+
+// ═══ Modal Helpers ═══
+const modalOverlay = document.getElementById('modalOverlay');
+const modalTitle = document.getElementById('modalTitle');
+const modalBody = document.getElementById('modalBody');
+const modalClose = document.getElementById('modalClose');
+
+function showModal(title, bodyHtml) {
+    modalTitle.textContent = title;
+    modalBody.innerHTML = bodyHtml;
+    modalOverlay.classList.add('show');
+}
+function hideModal() {
+    modalOverlay.classList.remove('show');
+}
+modalClose.addEventListener('click', hideModal);
+modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) hideModal();
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hideModal();
+});
+
+function showLogModal(text, cls, ts) {
+    const clsLabels = { info: '信息', plan: '规划', exec: '执行', done: '完成', path: '路径' };
+    showModal('📝 日志详情', `
+        <div style="margin-bottom:0.75rem;">
+            <span style="display:inline-block;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.7rem;background:#1e2130;color:#8891a8;">${ts}</span>
+            <span style="display:inline-block;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.7rem;background:#1e2130;color:#${cls==='plan'?'fbbf24':cls==='exec'?'6c8cff':cls==='done'?'34d399':cls==='path'?'f87171':'8891a8'};margin-left:0.3rem;">${clsLabels[cls]||cls}</span>
+        </div>
+        <div style="background:#0b0d14;padding:1rem;border-radius:8px;font-size:0.85rem;line-height:1.6;">${text}</div>
+        <div style="margin-top:0.75rem;font-size:0.7rem;color:#4a4d5e;">
+            <b>日志索引:</b> 第 ${state.logs.length} 条<br>
+            <b>模型:</b> ${state.currentTask?.execModel?.toUpperCase() || '—'}<br>
+            <b>工作流:</b> ${state.currentTask?.wf || '—'}
+        </div>
+    `);
+}
+
+function showFullLogModal() {
+    if (state.logs.length === 0) {
+        showModal('📋 完整日志', '<p style="color:#4a4d5e;">暂无日志记录。</p>');
+        return;
+    }
+    let html = `<div class="full-log-list"><div style="margin-bottom:0.5rem;color:#6b7280;font-size:0.75rem;">共 ${state.logs.length} 条日志</div>`;
+    state.logs.forEach((l, i) => {
+        const clsLabel = {info:'info',plan:'plan',exec:'exec',done:'done',path:'path'}[l.cls]||'info';
+        html += `<div class="fl-line"><span class="fl-ts">[${l.ts}]</span> <span class="fl-${clsLabel}">${l.text}</span></div>`;
+    });
+    html += '</div>';
+    showModal(`📋 完整日志 (${state.logs.length}条)`, html);
+}
+
+// ═══ Clickable Steps ═══
+function initStepClicks() {
+    wfSteps.querySelectorAll('.wf-step').forEach(step => {
+        step.addEventListener('click', () => {
+            step.classList.toggle('expanded');
+        });
+    });
+}
+
+// ═══ Make result items clickable ═══
+function initResultClicks() {
+    const resultItems = document.querySelectorAll('#resultGrid > div');
+    resultItems.forEach((item, idx) => {
+        item.classList.add('result-item');
+        item.addEventListener('click', () => {
+            if (!state.currentTask) return;
+            const t = state.currentTask;
+            const details = [
+                { title: '🧠 执行模型', content: `模型: ${t.execModel.toUpperCase()}<br>角色: 大模型执行<br>场景: ${t.type}<br>难度: ${t.type==='轻量任务'?'轻量':t.type==='编码任务'||t.type==='UI/前端开发'?'中等→困难':'中等'}` },
+                { title: '📐 规划模型', content: `模型: ${t.planModel.toUpperCase()}<br>角色: 小模型规划<br>工作流匹配: ${t.wf}<br>路径解析: ${t.pathDetail}` },
+                { title: '📂 归档位置', content: `路径: ${t.archive}<br>归档: ${t.archiveNeeded?'✅ 需要':'❌ 不需要'}<br>GitHub: ${t.pushGitHub?'✅ 推送':'❌ 不推送'}<br>${!t.archiveNeeded?'命名规则: [github_forbid] 前缀':''}` },
+                { title: '🔄 工作流', content: `ID: ${t.wf}<br>名称: ${t.name}<br>类型: ${t.type}<br>4维度 → 归档:${t.archiveNeeded?'✅':'❌'} | GitHub:${t.pushGitHub?'✅':'❌'}` }
+            ][idx];
+            if (details) showModal(details.title, `<pre style="white-space:pre-wrap;">${details.content}</pre>`);
+        });
+    });
+}
+
+// ═══ Clickable Archive Path ═══
+function initArchiveClicks() {
+    archivePath.querySelectorAll('.seg').forEach(seg => {
+        seg.addEventListener('click', () => {
+            const idx = parseInt(seg.dataset.idx);
+            const pathNames = ['📥 00-Inbox（临时收纳）', '📅 01-Daily（日常处理）', '📚 03-Knowledge（知识沉淀）', '🚀 GitHub Push（远程同步）'];
+            const pathDescs = [
+                '所有碎片、灵感、临时想法先进这里。不分类不整理，只记录。',
+                '每日日志、待办事项、工作记录。工作流核心枢纽，串联所有内容。',
+                '常青笔记、永久知识、体系化内容。长期迭代，持续沉淀。',
+                '公开内容自动推送到 GitHub 远程仓库，实现多端同步和备份。'
+            ];
+            if (idx >= 0 && idx < pathNames.length) {
+                showModal(pathNames[idx],
+                    `<div style="background:#0b0d14;padding:0.75rem;border-radius:8px;margin-bottom:0.5rem;font-size:0.85rem;">${pathDescs[idx]}</div>` +
+                    `<div style="font-size:0.75rem;color:#6b7280;">状态: ${idx <= state.archiveSegActive ? '✅ 已激活' : '⏳ 等待中'}</div>`
+                );
+            }
+        });
+    });
+}
+
+// ═══ Add full log button after log area ═══
+function addFullLogButton() {
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.style.width = '100%';
+    btn.style.marginTop = '0.5rem';
+    btn.style.fontSize = '0.7rem';
+    btn.textContent = '📋 查看完整日志';
+    btn.addEventListener('click', showFullLogModal);
+    logArea.parentElement.appendChild(btn);
+}
+
+// ═══ Init interactive features ═══
+initStepClicks();
+initResultClicks();
+initArchiveClicks();
+addFullLogButton();
 
 // Init
 setPhase('⏳ 等待开始', 'waiting');
