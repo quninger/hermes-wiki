@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Commander · 工作流执行示意</title>
+    <style>
+        /* ── Reset & Base ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', monospace;
+            background: #0b0d14;
+            color: #e2e4ea;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #0b0d14; }
+        ::-webkit-scrollbar-thumb { background: #2a2d3a; border-radius: 3px; }
+
+        /* ── Layout ── */
+        .app { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+        /* ── Header ── */
+        header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 0; border-bottom: 1px solid #1e2130; margin-bottom: 1.5rem;
+            flex-wrap: wrap; gap: 0.75rem;
+        }
+        header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; }
+        header h1 span { background: linear-gradient(135deg, #6c8cff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .header-stats { display: flex; gap: 1rem; font-size: 0.8rem; color: #6b7280; }
+        .header-stats b { color: #c0c7db; }
+
+        /* ── Top Controls ── */
+        .controls {
+            display: flex; gap: 0.6rem; flex-wrap: wrap;
+            padding: 1rem 0; margin-bottom: 1rem;
+        }
+        .btn {
+            padding: 0.55rem 1.2rem; border-radius: 8px; border: 1px solid #1e2130;
+            background: #131621; color: #c0c7db; font-size: 0.8rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 0.4rem;
+        }
+        .btn:hover { border-color: #2a2d3a; background: #1a1d2a; }
+        .btn:active { transform: scale(0.97); }
+        .btn.primary { background: linear-gradient(135deg, #6c8cff30, #a78bfa30); border-color: #6c8cff60; color: #c4b5fd; }
+        .btn.primary:hover { background: linear-gradient(135deg, #6c8cff50, #a78bfa50); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn .icon { font-size: 1.1rem; }
+
+        /* ── Main Grid ── */
+        .grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+        }
+        @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+
+        /* ── Card ── */
+        .card {
+            background: #131621; border: 1px solid #1e2130; border-radius: 14px;
+            padding: 1.25rem; transition: border-color 0.3s;
+        }
+        .card.highlight { border-color: #6c8cff60; }
+        .card-title {
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;
+            color: #6b7280; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+        .card-title .badge {
+            font-size: 0.6rem; padding: 0.1rem 0.5rem; border-radius: 20px;
+            background: #1e2130; color: #8891a8;
+        }
+
+        /* ── Workflow Steps ── */
+        .wf-steps { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.5rem 0; }
+        .wf-step {
+            display: flex; align-items: center; gap: 0.7rem;
+            padding: 0.5rem 0.75rem; border-radius: 8px;
+            background: #0b0d14; border: 1px solid transparent;
+            transition: all 0.4s; font-size: 0.85rem;
+        }
+        .wf-step .num {
+            width: 26px; height: 26px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 700;
+            background: #1e2130; color: #6b7280; flex-shrink: 0;
+        }
+        .wf-step .label { flex: 1; }
+        .wf-step .status-icon { font-size: 0.9rem; width: 20px; text-align: center; }
+
+        .wf-step.done { border-color: #34d39940; }
+        .wf-step.done .num { background: #34d39930; color: #34d399; }
+        .wf-step.active {
+            border-color: #6c8cff60; background: #6c8cff10;
+            animation: pulse-border 1.5s ease-in-out infinite;
+        }
+        .wf-step.active .num { background: #6c8cff30; color: #6c8cff; }
+        .wf-step.waiting .num { background: #1e2130; color: #4a4d5e; }
+        @keyframes pulse-border {
+            0%, 100% { border-color: #6c8cff60; }
+            50% { border-color: #6c8cff30; }
+        }
+
+        /* ── Log ── */
+        .log-area {
+            background: #0b0d14; border-radius: 10px; padding: 0.75rem;
+            font-size: 0.75rem; font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            min-height: 160px; max-height: 300px; overflow-y: auto;
+            line-height: 1.8;
+        }
+        .log-line { opacity: 0; animation: fadeIn 0.3s ease forwards; }
+        .log-line .ts { color: #4a4d5e; }
+        .log-line .info { color: #8891a8; }
+        .log-line .plan { color: #fbbf24; }
+        .log-line .exec { color: #6c8cff; }
+        .log-line .done { color: #34d399; }
+        .log-line .model { color: #a78bfa; }
+        .log-line .path { color: #f87171; }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* ── Model Chain Visual ── */
+        .model-vis {
+            display: flex; align-items: center; justify-content: center;
+            gap: 0.3rem; flex-wrap: wrap; margin: 0.5rem 0;
+        }
+        .m-node {
+            padding: 0.4rem 0.7rem; border-radius: 8px; border: 1px solid #1e2130;
+            font-size: 0.75rem; font-weight: 600; text-align: center;
+            transition: all 0.4s; min-width: 70px;
+            background: #0b0d14; color: #4a4d5e;
+        }
+        .m-node .m-role { font-size: 0.6rem; font-weight: 400; color: #4a4d5e; }
+        .m-arrow { color: #2a2d3a; font-size: 0.9rem; }
+        .m-node.active {
+            border-color: #6c8cff80; background: #6c8cff15; color: #6c8cff;
+            transform: scale(1.08); box-shadow: 0 0 20px #6c8cff20;
+        }
+        .m-node.active .m-role { color: #8891a8; }
+        .m-node.used { border-color: #34d39940; color: #34d399; }
+        .m-node.used .m-role { color: #6b7280; }
+        .m-node.skipped { opacity: 0.3; }
+        .m-node.selected {
+            border-color: #a78bfa80; background: #a78bfa15; color: #a78bfa;
+            transform: scale(1.12); box-shadow: 0 0 25px #a78bfa30;
+        }
+
+        /* ── Task Card ── */
+        .task-info {
+            background: #0b0d14; border-radius: 10px; padding: 0.75rem 1rem;
+            margin: 0.5rem 0; border: 1px solid #1e2130;
+        }
+        .task-info .task-type { color: #8891a8; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        .task-info .task-name { font-weight: 700; font-size: 1rem; margin-top: 0.2rem; }
+        .task-info .task-desc { color: #6b7280; font-size: 0.8rem; margin-top: 0.2rem; }
+
+        /* ── Archive Path ── */
+        .archive-path {
+            display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+            padding: 0.5rem 0.75rem; border-radius: 8px;
+            background: #0b0d14; border: 1px solid #1e2130;
+            font-size: 0.75rem; font-family: monospace; margin: 0.5rem 0;
+        }
+        .archive-path .seg { color: #6b7280; }
+        .archive-path .seg.active { color: #fbbf24; font-weight: 600; }
+        .archive-path .arrow-s { color: #2a2d3a; }
+
+        /* ── Phase Badge ── */
+        .phase-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.3rem 0.8rem; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 700;
+            border: 1px solid #1e2130; background: #1a1d2a;
+        }
+        .phase-badge.running { border-color: #6c8cff60; color: #6c8cff; }
+        .phase-badge.done { border-color: #34d39960; color: #34d399; }
+        .phase-badge.waiting { opacity: 0.4; }
+
+        /* ── Memory Tags ── */
+        .mem-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.5rem 0; }
+        .mem-tag {
+            padding: 0.25rem 0.6rem; border-radius: 6px;
+            font-size: 0.65rem; font-weight: 600;
+            background: #1e2130; color: #6b7280; border: 1px solid transparent;
+            transition: all 0.3s;
+        }
+        .mem-tag.active { border-color: #34d39940; color: #34d399; background: #34d39910; }
+
+        /* ── Loading dots ── */
+        .loading-dots::after {
+            content: ''; animation: dots 1.2s steps(4, end) infinite;
+        }
+        @keyframes dots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+        }
+
+        /* ── Full-width card ── */
+        .full { grid-column: 1 / -1; }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center; padding: 2rem 1rem; color: #4a4d5e;
+        }
+        .empty-state .big-icon { font-size: 2.5rem; margin-bottom: 0.5rem; opacity: 0.5; }
+
+        /* ── Timer ── */
+        .timer { font-size: 0.75rem; color: #4a4d5e; font-family: 'JetBrains Mono', monospace; }
+
+        /* ── Footer ── */
+        footer { text-align: center; padding: 2rem; color: #4a4d5e; font-size: 0.75rem; border-top: 1px solid #1e2130; margin-top: 2rem; }
+
+        /* ── Task Selector ── */
+        .task-options { display: flex; flex-direction: column; gap: 0.4rem; margin: 0.5rem 0; }
+        .task-opt {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.45rem 0.75rem; border-radius: 8px;
+            border: 1px solid #1e2130; background: #0b0d14;
+            cursor: pointer; transition: all 0.2s; font-size: 0.8rem;
+        }
+        .task-opt:hover { border-color: #2a2d3a; }
+        .task-opt .t-icon { font-size: 1rem; }
+        .task-opt .t-name { flex: 1; font-weight: 500; }
+        .task-opt .t-model { font-size: 0.65rem; color: #6b7280; padding: 0.1rem 0.4rem; border-radius: 4px; background: #1e2130; }
+
+        /* ── Step detail expand ── */
+        .step-detail {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
+            font-size: 0.75rem; color: #6b7280; padding-left: 3rem;
+        }
+        .wf-step.done .step-detail, .wf-step.active .step-detail { max-height: 80px; }
+
+        /* Score */
+        .score-badge {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.2rem 0.6rem; border-radius: 6px;
+            font-size: 0.7rem; font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+
+    <header>
+        <h1>⚡ <span>Workflow Commander</span></h1>
+        <div class="header-stats">
+            <span>任务: <b id="taskCount">0</b></span>
+            <span>⏱ <b id="timerDisplay">00:00</b></span>
+        </div>
+    </header>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button class="btn primary" id="btnNewTask">🎲 生成随机任务</button>
+        <button class="btn" id="btnReset">⟳ 重置</button>
+        <span style="flex:1"></span>
+        <span class="phase-badge waiting" id="phaseBadge">⏳ 等待开始</span>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid">
+
+        <!-- Left Column: Task + Model Chain -->
+        <div>
+            <!-- Task Display -->
+            <div class="card" id="taskCard">
+                <div class="card-title">📋 当前任务</div>
+                <div class="empty-state" id="emptyTask">
+                    <div class="big-icon">🎮</div>
+                    <div>点击「生成随机任务」开始</div>
+                    <div style="font-size:0.7rem;margin-top:0.3rem;">小模型规划 → 大模型执行 → 工作流闭环</div>
+                </div>
+                <div class="task-info" id="taskInfo" style="display:none;">
+                    <div class="task-type" id="taskTypeTag">—</div>
+                    <div class="task-name" id="taskNameTag">—</div>
+                    <div class="task-desc" id="taskDescTag">—</div>
+                </div>
+            </div>
+
+            <!-- Model Chain -->
+            <div class="card" style="margin-top:1rem;">
+                <div class="card-title">🧠 模型链 <span class="badge">小模型规划 → 大模型执行</span></div>
+                <div class="model-vis" id="modelVis">
+                    <div class="m-node" data-model="glm"><div>GLM</div><div class="m-role">小模型·规划</div></div>
+                    <div class="m-arrow">→</div>
+                    <div class="m-node" data-model="deepseek"><div>DeepSeek</div><div class="m-role">大模型·执行</div></div>
+                    <div class="m-arrow">→</div>
+                    <div class="m-node" data-model="mimo"><div>Mimo</div><div class="m-role">主模型·兜底</div></div>
+                </div>
+                <div style="font-size:0.7rem;color:#4a4d5e;text-align:center;margin-top:0.3rem;">
+                    <span id="modelDecision">等待任务…</span>
+                </div>
+            </div>
+
+            <!-- Archive Path -->
+            <div class="card" style="margin-top:1rem;">
+                <div class="card-title">📂 归档路径</div>
+                <div class="archive-path" id="archivePath">
+                    <span class="seg" data-idx="0">📥 00-Inbox</span>
+                    <span class="arrow-s">→</span>
+                    <span class="seg" data-idx="1">📅 01-Daily</span>
+                    <span class="arrow-s">→</span>
+                    <span class="seg" data-idx="2">📚 03-Knowledge</span>
+                    <span class="arrow-s">→</span>
+                    <span class="seg" data-idx="3">🚀 GitHub Push</span>
+                </div>
+                <div style="font-size:0.7rem;color:#4a4d5e" id="archiveDetail">等待路径解析…</div>
+            </div>
+        </div>
+
+        <!-- Right Column: Workflow + Log -->
+        <div>
+            <!-- 4-Step Workflow -->
+            <div class="card highlight">
+                <div class="card-title">🔄 四步执行流程</div>
+                <div class="wf-steps" id="wfSteps">
+                    <div class="wf-step waiting" data-step="1">
+                        <div class="num">1</div>
+                        <span class="label">匹配模板与路径</span>
+                        <span class="status-icon">○</span>
+                        <div class="step-detail">获取资源来源 / 执行模板 / 归档路径</div>
+                    </div>
+                    <div class="wf-step waiting" data-step="2">
+                        <div class="num">2</div>
+                        <span class="label">按流程执行</span>
+                        <span class="status-icon">○</span>
+                        <div class="step-detail">严格遵循既定步骤，不更改</div>
+                    </div>
+                    <div class="wf-step waiting" data-step="3">
+                        <div class="num">3</div>
+                        <span class="label">分层沉淀</span>
+                        <span class="status-icon">○</span>
+                        <div class="step-detail">主页.md / 工作流详情 / 日志</div>
+                    </div>
+                    <div class="wf-step waiting" data-step="4">
+                        <div class="num">4</div>
+                        <span class="label">记忆固化</span>
+                        <span class="status-icon">○</span>
+                        <div class="step-detail">写入 Hermes 长期记忆</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Execution Log -->
+            <div class="card" style="margin-top:1rem;">
+                <div class="card-title">📝 执行日志 <span class="badge" id="logCount">0 条</span></div>
+                <div class="log-area" id="logArea">
+                    <div style="color:#4a4d5e;font-size:0.75rem;text-align:center;padding:1rem;">等待任务开始…</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Summary (full width) -->
+        <div class="card full" id="resultCard" style="display:none;">
+            <div class="card-title">✅ 任务完成报告</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;" id="resultGrid">
+                <div style="background:#0b0d14;border-radius:8px;padding:0.75rem;text-align:center;">
+                    <div style="font-size:0.65rem;color:#6b7280;">执行模型</div>
+                    <div style="font-weight:700;color:#a78bfa;" id="resultModel">—</div>
+                </div>
+                <div style="background:#0b0d14;border-radius:8px;padding:0.75rem;text-align:center;">
+                    <div style="font-size:0.65rem;color:#6b7280;">规划模型</div>
+                    <div style="font-weight:700;color:#fbbf24;" id="resultPlan">—</div>
+                </div>
+                <div style="background:#0b0d14;border-radius:8px;padding:0.75rem;text-align:center;">
+                    <div style="font-size:0.65rem;color:#6b7280;">归档位置</div>
+                    <div style="font-weight:700;color:#34d399;font-size:0.75rem;" id="resultArchive">—</div>
+                </div>
+                <div style="background:#0b0d14;border-radius:8px;padding:0.75rem;text-align:center;">
+                    <div style="font-size:0.65rem;color:#6b7280;">工作流</div>
+                    <div style="font-weight:700;" id="resultWF">—</div>
+                </div>
+            </div>
+            <div class="mem-tags" id="memTags" style="margin-top:0.75rem;">
+                <span class="mem-tag"># 先查流程</span>
+                <span class="mem-tag"># 绑定路径</span>
+                <span class="mem-tag"># 归档沉淀</span>
+                <span class="mem-tag"># 记忆固化</span>
+                <span class="mem-tag"># 模型编排</span>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        Workflow Commander · Hermes Agent Workflow Simulator<br>
+        小模型规划 → 大模型执行 → 工作流闭环 · 模拟演示
+    </footer>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  Task Definitions
+// ══════════════════════════════════════════════
+const TASKS = [
+    {
+        name: 'Tech Stack Research',
+        desc: '对比 Vue3 + React 最新生态，输出一份技术选型建议',
+        type: '技术调研',
+        wf: 'WF-09',
+        archive: '03-Knowledge/comparisons/',
+        planModel: 'glm',
+        execModel: 'deepseek',
+        pathDetail: '资源来源: 官方文档 / 社区评测 → 归档: 03-Knowledge/comparisons/'
+    },
+    {
+        name: 'Daily Standup Summary',
+        desc: '汇总今日工作进展、遇到的问题、明日计划',
+        type: '每日日志',
+        wf: 'WF-01',
+        archive: '01-Daily/',
+        planModel: 'glm',
+        execModel: 'deepseek',
+        pathDetail: '资源来源: 会话记录 → 模板: daily-template → 归档: 01-Daily/'
+    },
+    {
+        name: 'Python Script Debug',
+        desc: '修复数据清洗脚本中的 IndexError，优化性能',
+        type: '编码任务',
+        wf: 'WF-11',
+        archive: '02-Project/【项目】脚本调试',
+        planModel: 'glm',
+        execModel: 'deepseek',
+        pathDetail: '资源来源: 代码仓库 → 执行: 按debug流程定位 → 归档: 02-Project/'
+    },
+    {
+        name: 'Weekly Knowledge Cleanup',
+        desc: '将收件箱碎片笔记沉淀到常青笔记，建立关联',
+        type: '知识沉淀',
+        wf: 'WF-03',
+        archive: '03-Knowledge/concepts/',
+        planModel: 'glm',
+        execModel: 'deepseek',
+        pathDetail: '资源来源: 00-Inbox/ → 执行: 按知识模板整理 → 归档: 03-Knowledge/'
+    },
+    {
+        name: 'API Documentation Search',
+        desc: '查找微信支付 JSAPI 的最新接入文档和参数说明',
+        type: '技术调研',
+        wf: 'WF-09',
+        archive: '03-Knowledge/entities/',
+        planModel: 'glm',
+        execModel: 'deepseek',
+        pathDetail: '资源来源: 微信开放平台文档 → 执行: 搜索+提取 → 归档: 03-Knowledge/'
+    },
+    {
+        name: 'Project Review Meeting Notes',
+        desc: '整理项目回顾会议纪要，提取行动项和风险点',
+        type: '项目管理',
+        wf: 'WF-04',
+        archive: '02-Project/',
+        planModel: 'glm',
+        execModel: 'mimo',
+        pathDetail: '资源来源: 会议录音/笔记 → 执行: 提取要点 → 归档: 02-Project/'
+    },
+    {
+        name: 'Monthly Archive & Refactor',
+        desc: '归档完结项目、清理无效笔记、优化目录结构',
+        type: '月度复盘',
+        wf: 'WF-06',
+        archive: '98-Archive/',
+        planModel: 'glm',
+        execModel: 'deepseek',
+        pathDetail: '资源来源: 各活跃目录 → 执行: 按mothly-template归档 → 归档: 98-Archive/'
+    },
+    {
+        name: 'Quick Format Conversion',
+        desc: '将 Markdown 批量转为 HTML 页面',
+        type: '轻量任务',
+        wf: 'WF-11',
+        archive: '04-Resource/raw/',
+        planModel: 'glm',
+        execModel: 'glm',
+        pathDetail: '资源来源: markdown文件 → 执行: 批量转换 → 归档: 04-Resource/raw/'
+    },
+    {
+        name: 'Web Page Bookmark Clip',
+        desc: '提取网页优质内容并归档到知识库',
+        type: '网页收藏',
+        wf: 'WF-10',
+        archive: '03-Knowledge/concepts/',
+        planModel: 'glm',
+        execModel: 'deepseek',
+        pathDetail: '资源来源: 目标网页 → 执行: 提取关键内容 → 归档: 03-Knowledge/'
+    },
+    {
+        name: 'Model Chain Routing Test',
+        desc: '测试不同模型在不同任务上的响应质量和速度',
+        type: '技术调研',
+        wf: 'WF-12',
+        archive: '03-Knowledge/comparisons/',
+        planModel: 'glm',
+        execModel: 'mimo',
+        pathDetail: '资源来源: API测试结果 → 执行: 对比分析 → 归档: 03-Knowledge/'
+    }
+];
+
+// Workflow step descriptions
+const STEP_DESCS = [
+    { label: '匹配模板与路径', detail: '获取资源来源 / 执行模板 / 归档路径' },
+    { label: '按流程执行', detail: '严格遵循既定步骤，不更改' },
+    { label: '分层沉淀', detail: '主页.md / 工作流详情 / 日志' },
+    { label: '记忆固化', detail: '写入 Hermes 长期记忆' }
+];
+
+const WF_STEPS = ['pathMatching', 'execute', 'deposit', 'memorize'];
+
+// ══════════════════════════════════════════════
+//  State
+// ══════════════════════════════════════════════
+let state = {
+    currentTask: null,
+    phase: 'idle', // idle | planning | executing | done
+    stepIndex: -1,
+    logs: [],
+    taskCount: 0,
+    archiveSegActive: -1,
+    modelUsed: [],
+    timerInterval: null,
+    seconds: 0,
+    planComplete: false,
+};
+
+// ══════════════════════════════════════════════
+//  DOM Refs
+// ══════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const btnNew = $('btnNewTask');
+const btnReset = $('btnReset');
+const emptyTask = $('emptyTask');
+const taskInfo = $('taskInfo');
+const taskTypeTag = $('taskTypeTag');
+const taskNameTag = $('taskNameTag');
+const taskDescTag = $('taskDescTag');
+const modelVis = $('modelVis');
+const modelDecision = $('modelDecision');
+const archivePath = $('archivePath');
+const archiveDetail = $('archiveDetail');
+const wfSteps = $('wfSteps');
+const logArea = $('logArea');
+const logCount = $('logCount');
+const phaseBadge = $('phaseBadge');
+const timerDisplay = $('timerDisplay');
+const taskCount = $('taskCount');
+const resultCard = $('resultCard');
+const resultModel = $('resultModel');
+const resultPlan = $('resultPlan');
+const resultArchive = $('resultArchive');
+const resultWF = $('resultWF');
+const memTags = $('memTags');
+const memTagEls = memTags.querySelectorAll('.mem-tag');
+
+// ══════════════════════════════════════════════
+//  Helpers
+// ══════════════════════════════════════════════
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function getTs() {
+    const d = new Date();
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function addLog(text, cls = 'info') {
+    const line = document.createElement('div');
+    line.className = `log-line ${cls}`;
+    line.innerHTML = `<span class="ts">[${getTs()}]</span> <span class="${cls}">${text}</span>`;
+    logArea.appendChild(line);
+    logArea.scrollTop = logArea.scrollHeight;
+    state.logs.push({ text, cls });
+    logCount.textContent = `${state.logs.length} 条`;
+    // Remove placeholder if first log
+    const ph = logArea.querySelector('div[style*="text-align:center"]');
+    if (ph) ph.remove();
+}
+
+function clearLogs() {
+    logArea.innerHTML = '';
+    state.logs = [];
+    logCount.textContent = '0 条';
+}
+
+function setPhase(text, cls = 'waiting') {
+    phaseBadge.textContent = text;
+    phaseBadge.className = `phase-badge ${cls}`;
+}
+
+function setArchiveSeg(idx) {
+    const segs = archivePath.querySelectorAll('.seg');
+    segs.forEach((s, i) => {
+        s.classList.toggle('active', i <= idx);
+    });
+    state.archiveSegActive = idx;
+}
+
+function resetArchiveSeg() {
+    const segs = archivePath.querySelectorAll('.seg');
+    segs.forEach(s => s.classList.remove('active'));
+    state.archiveSegActive = -1;
+}
+
+function resetWFSteps() {
+    const steps = wfSteps.querySelectorAll('.wf-step');
+    steps.forEach(s => {
+        s.className = 'wf-step waiting';
+        s.querySelector('.status-icon').textContent = '○';
+    });
+    state.stepIndex = -1;
+}
+
+function setWFStep(idx, status) {
+    const steps = wfSteps.querySelectorAll('.wf-step');
+    if (idx >= steps.length) return;
+    const s = steps[idx];
+    s.className = `wf-step ${status}`;
+    s.querySelector('.status-icon').textContent =
+        status === 'done' ? '✅' : status === 'active' ? '►' : '○';
+}
+
+function resetModelChain() {
+    modelVis.querySelectorAll('.m-node').forEach(n => {
+        n.className = 'm-node';
+    });
+    state.modelUsed = [];
+    modelDecision.textContent = '等待任务…';
+}
+
+function setModelUsed(modelName) {
+    const nodes = modelVis.querySelectorAll('.m-node');
+    nodes.forEach(n => {
+        if (n.dataset.model === modelName) {
+            n.className = 'm-node used';
+        }
+    });
+    if (!state.modelUsed.includes(modelName)) state.modelUsed.push(modelName);
+}
+
+function setModelActive(modelName) {
+    const nodes = modelVis.querySelectorAll('.m-node');
+    nodes.forEach(n => {
+        if (n.dataset.model === modelName) {
+            n.className = 'm-node active';
+        } else if (!state.modelUsed.includes(n.dataset.model)) {
+            n.className = 'm-node skipped';
+        }
+    });
+}
+
+function setModelSelected(modelName) {
+    const nodes = modelVis.querySelectorAll('.m-node');
+    nodes.forEach(n => {
+        if (n.dataset.model === modelName) {
+            n.className = 'm-node selected';
+        }
+    });
+}
+
+function updateTimer() {
+    const m = Math.floor(state.seconds / 60);
+    const s = state.seconds % 60;
+    timerDisplay.textContent = `${pad(m)}:${pad(s)}`;
+}
+
+function startTimer() {
+    if (state.timerInterval) return;
+    state.timerInterval = setInterval(() => {
+        state.seconds++;
+        updateTimer();
+    }, 1000);
+}
+
+function stopTimer() {
+    if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+    }
+}
+
+function resetTimer() {
+    stopTimer();
+    state.seconds = 0;
+    updateTimer();
+}
+
+// ══════════════════════════════════════════════
+//  Main Execution
+// ══════════════════════════════════════════════
+async function runTask(task) {
+    if (state.phase !== 'idle') return;
+    state.phase = 'planning';
+    btnNew.disabled = true;
+    btnReset.disabled = true;
+    startTimer();
+
+    // Display task
+    taskTypeTag.textContent = task.type;
+    taskNameTag.textContent = task.name;
+    taskDescTag.textContent = task.desc;
+    taskInfo.style.display = 'block';
+    emptyTask.style.display = 'none';
+
+    state.currentTask = task;
+    state.taskCount++;
+    taskCount.textContent = state.taskCount;
+
+    // ── Phase 1: 小模型规划 (GLM) ──
+    setPhase('🧠 小模型规划中…', 'running');
+    addLog(`[规划] 收到任务: "${task.name}"`, 'plan');
+    addLog(`[规划] 任务类型: ${task.type} | 匹配工作流: ${task.wf}`, 'plan');
+
+    // Activate GLM
+    setModelActive('glm');
+    await sleep(800);
+    addLog('[规划] 小模型 GLM 开始解析任务需求…', 'plan');
+    await sleep(1200);
+
+    // Show planning steps
+    addLog(`[规划] 匹配工作流: ${task.wf} → 查阅 主页.md`, 'plan');
+    await sleep(600);
+    addLog(`[规划] 三类路径解析完成: ${task.pathDetail}`, 'plan');
+    await sleep(600);
+    addLog(`[规划] 决策: ${task.execModel} 执行 → 归档 ${task.archive}`, 'plan');
+
+    setModelUsed('glm');
+    await sleep(400);
+
+    // Phase 1 complete
+    state.planComplete = true;
+    addLog('[规划] ✅ 小模型规划完成，移交大模型执行', 'done');
+    setModelActive('glm');  // keep it active but mark done
+
+    // ── Phase 2: 大模型执行 ──
+    setPhase('⚡ 大模型执行中…', 'running');
+    addLog(`[执行] 大模型 ${task.execModel} 接手任务`, 'exec');
+
+    // Activate exec model
+    await sleep(400);
+    setModelActive(task.execModel);
+
+    // Auto-set archive seg 0 (Inbox)
+    await sleep(600);
+    setArchiveSeg(0);
+    addLog('[执行] 📥 资源进入 00-Inbox', 'path');
+
+    await sleep(700);
+
+    // Step 1: 匹配模板与路径
+    state.phase = 'executing';
+    state.stepIndex = 0;
+    setWFStep(0, 'active');
+    addLog('[步骤 1] 匹配模板与路径', 'exec');
+    await sleep(1000);
+    addLog(`[步骤 1] 资源来源已定位 → 执行模板已匹配 → 归档路径: ${task.archive}`, 'path');
+    await sleep(600);
+    setArchiveSeg(1);
+    addLog('[步骤 1] 📅 资源分类至 01-Daily', 'path');
+    await sleep(500);
+    setWFStep(0, 'done');
+
+    // Step 2: 按流程执行
+    state.stepIndex = 1;
+    setWFStep(1, 'active');
+    addLog('[步骤 2] 按流程执行', 'exec');
+    await sleep(1200);
+    addLog(`[步骤 2] 严格遵循 ${task.wf} 既定步骤执行中…`, 'exec');
+    await sleep(800);
+    addLog('[步骤 2] 不新增、不简化、不更改既定流程', 'exec');
+    await sleep(700);
+    setArchiveSeg(2);
+    addLog(`[步骤 2] 📚 结果沉淀至 ${task.archive}`, 'path');
+    await sleep(500);
+    setWFStep(1, 'done');
+
+    // Step 3: 分层沉淀
+    state.stepIndex = 2;
+    setWFStep(2, 'active');
+    addLog('[步骤 3] 分层沉淀', 'exec');
+    await sleep(1000);
+    addLog('[步骤 3] 总览 → 主页.md 新增索引', 'path');
+    await sleep(600);
+    addLog('[步骤 3] 详情 → 工作流文档更新', 'path');
+    await sleep(600);
+    addLog('[步骤 3] 日志 → log.md 追加记录', 'path');
+    await sleep(400);
+    setWFStep(2, 'done');
+
+    // Step 4: 记忆固化
+    state.stepIndex = 3;
+    setWFStep(3, 'active');
+    addLog('[步骤 4] 记忆固化', 'exec');
+    await sleep(1000);
+    addLog('[步骤 4] 定稿工作流程写入长期记忆', 'done');
+    await sleep(500);
+    setArchiveSeg(3);
+    addLog('[步骤 4] 🚀 GitHub 推送完成', 'path');
+    await sleep(500);
+    setWFStep(3, 'done');
+
+    // Mark exec model as used
+    setModelUsed(task.execModel);
+    setModelSelected(task.execModel);
+    await sleep(400);
+
+    // ── Complete ──
+    state.phase = 'done';
+    stopTimer();
+    setPhase('✅ 任务完成', 'done');
+    addLog('══════════════════════════════', 'done');
+    addLog(`✅ [完成] 任务 "${task.name}" 全部完成`, 'done');
+
+    // Show results
+    resultCard.style.display = 'block';
+    resultModel.textContent = task.execModel.toUpperCase();
+    resultPlan.textContent = task.planModel.toUpperCase();
+    resultArchive.textContent = task.archive;
+    resultWF.textContent = task.wf;
+
+    // Activate all memory tags
+    memTagEls.forEach((tag, i) => {
+        setTimeout(() => tag.classList.add('active'), i * 200);
+    });
+
+    btnNew.disabled = false;
+    btnReset.disabled = false;
+    state.phase = 'idle';
+}
+
+// ══════════════════════════════════════════════
+//  Event Handlers
+// ══════════════════════════════════════════════
+
+btnNew.addEventListener('click', () => {
+    if (state.phase !== 'idle') return;
+    resetWFSteps();
+    resetModelChain();
+    resetArchiveSeg();
+    clearLogs();
+    resultCard.style.display = 'none';
+    memTagEls.forEach(t => t.classList.remove('active'));
+    // Hide old task info if showing
+    taskInfo.style.display = 'none';
+    emptyTask.style.display = 'block';
+    setPhase('🎲 生成任务…', 'running');
+
+    const task = TASKS[Math.floor(Math.random() * TASKS.length)];
+    runTask(task);
+});
+
+btnReset.addEventListener('click', () => {
+    if (state.phase !== 'idle' && state.phase !== 'done') {
+        if (confirm('任务执行中，确定重置？')) {
+            state.phase = 'idle';
+        } else return;
+    }
+    resetWFSteps();
+    resetModelChain();
+    resetArchiveSeg();
+    clearLogs();
+    resetTimer();
+    taskInfo.style.display = 'none';
+    emptyTask.style.display = 'block';
+    resultCard.style.display = 'none';
+    state.taskCount = 0;
+    taskCount.textContent = '0';
+    memTagEls.forEach(t => t.classList.remove('active'));
+    setPhase('⏳ 等待开始', 'waiting');
+    btnNew.disabled = false;
+    btnReset.disabled = false;
+    state.phase = 'idle';
+});
+
+// Init
+setPhase('⏳ 等待开始', 'waiting');
+addLog('🎮 Workflow Commander 已就绪', 'info');
+addLog('📋 点击「生成随机任务」查看工作流执行全流程', 'info');
+addLog('🧠 小模型规划 → 大模型执行 → 工作流闭环', 'info');
+</script>
+</body>
+</html>
