@@ -40,3 +40,28 @@ node_modules/
 # === 环境变量 / 密钥 ===
 .env
 .env.local
+
+# === Obsidian 配置 ===
+.obsidian/
+
+# === Hermes 内部 ===
+.hermes/
+
+# === 附件资源 ===
+99-Assets/
+
+# === 归档库（隐私） ===
+98-Archive/
+
+# === 收件箱（可能含隐私） ===
+00-Inbox/
+
+# === webui 密钥 ===
+.webui_secret_key
+
+# === 嵌入式 git 仓库 ===
+zhejiang-railway-*/
+xiaohongshu-hot/
+
+# === 旧版文件 ===
+({name
