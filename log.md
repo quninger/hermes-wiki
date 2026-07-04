@@ -46,3 +46,9 @@
 - 创建 04-Resource/工作流/WF-01~12 共12个工作流详情文档
 - 执行流程变为：查主页.md→打开详细文件→按文件内容执行
 - 记忆固化更新，工作流细节不在记忆中重复存储
+
+## [2026-07-04] create | 一键配置手册
+- 创建 03-Knowledge/concepts/【系统】Agent工作流与模型编排-一键配置手册.md
+- 7章完整内容：系统配置/Obsidian结构/4维度表/Frontmatter规范/记忆规则/[github_forbid]/一键配置步骤
+- 适用于所有 Agent 客户端（Hermes/Cursor/Claude Code/Codex）
+- 主页.md 快速链接已更新
