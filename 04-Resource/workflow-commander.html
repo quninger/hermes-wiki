@@ -277,6 +277,12 @@
                     <div class="task-type" id="taskTypeTag">—</div>
                     <div class="task-name" id="taskNameTag">—</div>
                     <div class="task-desc" id="taskDescTag">—</div>
+                    <div class="task-dims" id="taskDims" style="display:flex;gap:0.3rem;margin-top:0.4rem;flex-wrap:wrap;">
+                        <span class="dim-badge" id="dimType" style="padding:0.15rem 0.5rem;border-radius:4px;font-size:0.65rem;font-weight:600;background:#1e2130;color:#8891a8;">类型</span>
+                        <span class="dim-badge" id="dimArchive" style="padding:0.15rem 0.5rem;border-radius:4px;font-size:0.65rem;font-weight:600;background:#1e2130;color:#8891a8;">归档</span>
+                        <span class="dim-badge" id="dimGitHub" style="padding:0.15rem 0.5rem;border-radius:4px;font-size:0.65rem;font-weight:600;background:#1e2130;color:#8891a8;">GitHub</span>
+                        <span class="dim-badge" id="dimModel" style="padding:0.15rem 0.5rem;border-radius:4px;font-size:0.65rem;font-weight:600;background:#1e2130;color:#8891a8;">模型</span>
+                    </div>
                 </div>
             </div>
 
@@ -403,6 +409,8 @@ const TASKS = [
         type: '轻量任务',
         wf: 'WF-11',
         archive: '04-Resource/raw/',
+        pushGitHub: false,
+        archiveNeeded: false,
         planModel: 'glm',
         execModel: 'glm',
         pathDetail: '资源来源: markdown文件 → 执行: 批量转换 → 归档: 04-Resource/raw/'
@@ -413,6 +421,8 @@ const TASKS = [
         type: '轻量任务',
         wf: 'WF-11',
         archive: '98-Archive/',
+        pushGitHub: false,
+        archiveNeeded: false,
         planModel: 'glm',
         execModel: 'glm',
         pathDetail: '资源来源: 日志目录 → 执行: 压缩打包 → 归档: 98-Archive/'
@@ -423,6 +433,8 @@ const TASKS = [
         type: '轻量任务',
         wf: 'WF-01',
         archive: '01-Daily/',
+        pushGitHub: true,
+        archiveNeeded: true,
         planModel: 'glm',
         execModel: 'glm',
         pathDetail: '资源来源: 当前项目进度 → 执行: 排期规划 → 归档: 01-Daily/'
@@ -433,6 +445,8 @@ const TASKS = [
         type: '轻量任务',
         wf: 'WF-10',
         archive: '03-Knowledge/concepts/',
+        pushGitHub: true,
+        archiveNeeded: true,
         planModel: 'glm',
         execModel: 'glm',
         pathDetail: '资源来源: 目标网页 → 执行: 提取关键内容 → 归档: 03-Knowledge/'
@@ -444,6 +458,8 @@ const TASKS = [
         type: '技术调研',
         wf: 'WF-09',
         archive: '03-Knowledge/comparisons/',
+        pushGitHub: true,
+        archiveNeeded: true,
         planModel: 'glm',
         execModel: 'deepseek',
         pathDetail: '资源来源: 官方文档 / 社区评测 → 归档: 03-Knowledge/comparisons/'
@@ -454,6 +470,8 @@ const TASKS = [
         type: '每日日志',
         wf: 'WF-01',
         archive: '01-Daily/',
+        pushGitHub: true,
+        archiveNeeded: true,
         planModel: 'glm',
         execModel: 'deepseek',
         pathDetail: '资源来源: 会话记录 → 模板: daily-template → 归档: 01-Daily/'
@@ -464,9 +482,11 @@ const TASKS = [
         type: '系统诊断',
         wf: 'WF-09',
         archive: '03-Knowledge/queries/',
+        pushGitHub: true,
+        archiveNeeded: true,
         planModel: 'glm',
         execModel: 'deepseek',
-        pathDetail: '资源来源: 系统信息/进程列表 → 执行: 分析资源使用 → 归档: 03-Knowledge/'
+        pathDetail: '资源来源: 系统信息/进程列表 → 归档: 03-Knowledge/'
     },
     {
         name: 'Python Script Debug',
@@ -474,6 +494,8 @@ const TASKS = [
         type: '编码任务',
         wf: 'WF-11',
         archive: '02-Project/【项目】脚本调试',
+        pushGitHub: false,
+        archiveNeeded: false,
         planModel: 'glm',
         execModel: 'deepseek',
         pathDetail: '资源来源: 代码仓库 → 执行: 按debug流程定位 → 归档: 02-Project/'
@@ -484,6 +506,8 @@ const TASKS = [
         type: '知识沉淀',
         wf: 'WF-03',
         archive: '03-Knowledge/concepts/',
+        pushGitHub: true,
+        archiveNeeded: true,
         planModel: 'glm',
         execModel: 'deepseek',
         pathDetail: '资源来源: 00-Inbox/ → 执行: 按知识模板整理 → 归档: 03-Knowledge/'
@@ -494,6 +518,8 @@ const TASKS = [
         type: '工具配置',
         wf: 'WF-12',
         archive: '03-Knowledge/entities/',
+        pushGitHub: true,
+        archiveNeeded: true,
         planModel: 'glm',
         execModel: 'deepseek',
         pathDetail: '资源来源: 当前SOUL.md → 执行: 编辑配置 → 归档: 03-Knowledge/'
@@ -505,6 +531,8 @@ const TASKS = [
         type: 'UI/前端开发',
         wf: 'WF-11',
         archive: '04-Resource/',
+        pushGitHub: true,
+        archiveNeeded: true,
         planModel: 'glm',
         execModel: 'deepseek',
         pathDetail: '资源来源: 设计稿/需求 → 执行: 编码实现 → 归档: 04-Resource/'
@@ -515,6 +543,8 @@ const TASKS = [
         type: '技术调研',
         wf: 'WF-12',
         archive: '03-Knowledge/comparisons/',
+        pushGitHub: true,
+        archiveNeeded: true,
         planModel: 'glm',
         execModel: 'mimo',
         pathDetail: '资源来源: API测试结果 → 执行: 对比分析 → 归档: 03-Knowledge/'
@@ -723,6 +753,23 @@ async function runTask(task) {
     taskTypeTag.textContent = task.type;
     taskNameTag.textContent = task.name;
     taskDescTag.textContent = task.desc;
+    // 4 dimensions
+    const dimType = document.getElementById('dimType');
+    const dimArchive = document.getElementById('dimArchive');
+    const dimGitHub = document.getElementById('dimGitHub');
+    const dimModel = document.getElementById('dimModel');
+    dimType.textContent = '🔄 ' + task.wf;
+    dimType.style.border = '1px solid #6c8cff40';
+    dimType.style.color = '#99b2ff';
+    dimArchive.textContent = task.archiveNeeded ? '✅ 归档' : '❌ 不归档';
+    dimArchive.style.border = task.archiveNeeded ? '1px solid #34d39940' : '1px solid #4a4d5e';
+    dimArchive.style.color = task.archiveNeeded ? '#6ee7b7' : '#6b7280';
+    dimGitHub.textContent = task.pushGitHub ? '✅ 推送 GitHub' : '❌ 不推送';
+    dimGitHub.style.border = task.pushGitHub ? '1px solid #34d39940' : '1px solid #f8717140';
+    dimGitHub.style.color = task.pushGitHub ? '#6ee7b7' : '#f87171';
+    dimModel.textContent = '🧠 ' + task.execModel.toUpperCase();
+    dimModel.style.border = '1px solid #a78bfa40';
+    dimModel.style.color = '#c4b5fd';
     taskInfo.style.display = 'block';
     emptyTask.style.display = 'none';
 
@@ -734,6 +781,7 @@ async function runTask(task) {
     setPhase('🧠 小模型规划中…', 'running');
     addLog(`[规划] 收到任务: "${task.name}"`, 'plan');
     addLog(`[规划] 任务类型: ${task.type} | 匹配工作流: ${task.wf}`, 'plan');
+    addLog(`[规划] 4维度 | 类型: ${task.wf} | 归档: ${task.archiveNeeded?'✅需要':'❌不需要'} | GitHub: ${task.pushGitHub?'✅推送':'❌不推送'} | 模型: ${task.execModel.toUpperCase()}`, 'plan');
 
     // Activate GLM
     setModelActive('glm');
