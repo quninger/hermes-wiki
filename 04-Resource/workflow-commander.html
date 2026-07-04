@@ -332,25 +332,25 @@
                         <div class="num">1</div>
                         <span class="label">匹配模板与路径</span>
                         <span class="status-icon">○</span>
-                        <div class="step-detail">获取资源来源 / 执行模板 / 归档路径</div>
+                        <div class="step-detail">获取三类路径：资源来源 / 执行模板 / 结果归档</div>
                     </div>
                     <div class="wf-step waiting" data-step="2">
                         <div class="num">2</div>
                         <span class="label">按流程执行</span>
                         <span class="status-icon">○</span>
-                        <div class="step-detail">严格遵循既定步骤，不更改</div>
+                        <div class="step-detail">严格遵循既定步骤，遇问题先查 03-Knowledge</div>
                     </div>
                     <div class="wf-step waiting" data-step="3">
                         <div class="num">3</div>
                         <span class="label">分层沉淀</span>
                         <span class="status-icon">○</span>
-                        <div class="step-detail">主页.md / 工作流详情 / 日志</div>
+                        <div class="step-detail">分层三级：主页.md ← 总览 / 工作流详情 / 日志归档</div>
                     </div>
                     <div class="wf-step waiting" data-step="4">
                         <div class="num">4</div>
                         <span class="label">记忆固化</span>
                         <span class="status-icon">○</span>
-                        <div class="step-detail">写入 Hermes 长期记忆</div>
+                        <div class="step-detail">写入长期记忆，后续任务优先匹配</div>
                     </div>
                 </div>
             </div>
@@ -567,10 +567,10 @@ const TASKS = [
 
 // Workflow step descriptions
 const STEP_DESCS = [
-    { label: '匹配模板与路径', detail: '获取资源来源 / 执行模板 / 归档路径' },
-    { label: '按流程执行', detail: '严格遵循既定步骤，不更改' },
-    { label: '分层沉淀', detail: '主页.md / 工作流详情 / 日志' },
-    { label: '记忆固化', detail: '写入 Hermes 长期记忆' }
+    { label: '匹配模板与路径', detail: '获取三类路径：资源来源 / 执行模板 / 结果归档' },
+    { label: '按流程执行', detail: '严格遵循既定步骤，遇问题先查 03-Knowledge' },
+    { label: '分层沉淀', detail: '分层三级：主页.md ← 总览 / 工作流详情 / 日志归档' },
+    { label: '记忆固化', detail: '写入长期记忆，后续任务优先匹配' }
 ];
 
 const WF_STEPS = ['pathMatching', 'execute', 'deposit', 'memorize'];
