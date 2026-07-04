@@ -396,9 +396,51 @@
 //  Task Definitions
 // ══════════════════════════════════════════════
 const TASKS = [
+    // ═══ 轻量任务 → glm-4-flash（免费） ═══
+    {
+        name: 'Quick Format Conversion',
+        desc: '将 Markdown 批量转为 HTML 页面（文本格式化）',
+        type: '轻量任务',
+        wf: 'WF-11',
+        archive: '04-Resource/raw/',
+        planModel: 'glm',
+        execModel: 'glm',
+        pathDetail: '资源来源: markdown文件 → 执行: 批量转换 → 归档: 04-Resource/raw/'
+    },
+    {
+        name: 'File Compression Task',
+        desc: '压缩项目日志目录，打包为 ZIP 存档',
+        type: '轻量任务',
+        wf: 'WF-11',
+        archive: '98-Archive/',
+        planModel: 'glm',
+        execModel: 'glm',
+        pathDetail: '资源来源: 日志目录 → 执行: 压缩打包 → 归档: 98-Archive/'
+    },
+    {
+        name: 'Weekly Plan Draft',
+        desc: '规划下周工作安排，列出每日重点事项',
+        type: '轻量任务',
+        wf: 'WF-01',
+        archive: '01-Daily/',
+        planModel: 'glm',
+        execModel: 'glm',
+        pathDetail: '资源来源: 当前项目进度 → 执行: 排期规划 → 归档: 01-Daily/'
+    },
+    {
+        name: 'Web Page Bookmark Clip',
+        desc: '提取网页优质内容并归档到知识库（网页提取）',
+        type: '轻量任务',
+        wf: 'WF-10',
+        archive: '03-Knowledge/concepts/',
+        planModel: 'glm',
+        execModel: 'glm',
+        pathDetail: '资源来源: 目标网页 → 执行: 提取关键内容 → 归档: 03-Knowledge/'
+    },
+    // ═══ 中等任务 → deepseek ═══
     {
         name: 'Tech Stack Research',
-        desc: '对比 Vue3 + React 最新生态，输出一份技术选型建议',
+        desc: '对比 Vue3 + React 最新生态，输出技术选型建议（技术调研）',
         type: '技术调研',
         wf: 'WF-09',
         archive: '03-Knowledge/comparisons/',
@@ -417,8 +459,18 @@ const TASKS = [
         pathDetail: '资源来源: 会话记录 → 模板: daily-template → 归档: 01-Daily/'
     },
     {
+        name: 'System Diagnostic Check',
+        desc: '排查 CPU 飙升原因，分析进程和资源使用（系统诊断）',
+        type: '系统诊断',
+        wf: 'WF-09',
+        archive: '03-Knowledge/queries/',
+        planModel: 'glm',
+        execModel: 'deepseek',
+        pathDetail: '资源来源: 系统信息/进程列表 → 执行: 分析资源使用 → 归档: 03-Knowledge/'
+    },
+    {
         name: 'Python Script Debug',
-        desc: '修复数据清洗脚本中的 IndexError，优化性能',
+        desc: '修复数据清洗脚本中的 IndexError，优化性能（编码调试）',
         type: '编码任务',
         wf: 'WF-11',
         archive: '02-Project/【项目】脚本调试',
@@ -428,7 +480,7 @@ const TASKS = [
     },
     {
         name: 'Weekly Knowledge Cleanup',
-        desc: '将收件箱碎片笔记沉淀到常青笔记，建立关联',
+        desc: '将收件箱碎片笔记沉淀到常青笔记，建立关联（知识沉淀）',
         type: '知识沉淀',
         wf: 'WF-03',
         archive: '03-Knowledge/concepts/',
@@ -437,58 +489,29 @@ const TASKS = [
         pathDetail: '资源来源: 00-Inbox/ → 执行: 按知识模板整理 → 归档: 03-Knowledge/'
     },
     {
-        name: 'API Documentation Search',
-        desc: '查找微信支付 JSAPI 的最新接入文档和参数说明',
-        type: '技术调研',
-        wf: 'WF-09',
+        name: 'SOUL.md Config Update',
+        desc: '更新 SOUL.md 工作流路由配置，添加新模型路由（工具配置）',
+        type: '工具配置',
+        wf: 'WF-12',
         archive: '03-Knowledge/entities/',
         planModel: 'glm',
         execModel: 'deepseek',
-        pathDetail: '资源来源: 微信开放平台文档 → 执行: 搜索+提取 → 归档: 03-Knowledge/'
+        pathDetail: '资源来源: 当前SOUL.md → 执行: 编辑配置 → 归档: 03-Knowledge/'
     },
+    // ═══ 中高难度 → deepseek / Cursor CLI ═══
     {
-        name: 'Project Review Meeting Notes',
-        desc: '整理项目回顾会议纪要，提取行动项和风险点',
-        type: '项目管理',
-        wf: 'WF-04',
-        archive: '02-Project/',
-        planModel: 'glm',
-        execModel: 'mimo',
-        pathDetail: '资源来源: 会议录音/笔记 → 执行: 提取要点 → 归档: 02-Project/'
-    },
-    {
-        name: 'Monthly Archive & Refactor',
-        desc: '归档完结项目、清理无效笔记、优化目录结构',
-        type: '月度复盘',
-        wf: 'WF-06',
-        archive: '98-Archive/',
-        planModel: 'glm',
-        execModel: 'deepseek',
-        pathDetail: '资源来源: 各活跃目录 → 执行: 按mothly-template归档 → 归档: 98-Archive/'
-    },
-    {
-        name: 'Quick Format Conversion',
-        desc: '将 Markdown 批量转为 HTML 页面',
-        type: '轻量任务',
+        name: 'Interactive UI Dashboard',
+        desc: '开发一个数据可视化仪表盘页面，含图表和交互（UI开发）',
+        type: 'UI/前端开发',
         wf: 'WF-11',
-        archive: '04-Resource/raw/',
-        planModel: 'glm',
-        execModel: 'glm',
-        pathDetail: '资源来源: markdown文件 → 执行: 批量转换 → 归档: 04-Resource/raw/'
-    },
-    {
-        name: 'Web Page Bookmark Clip',
-        desc: '提取网页优质内容并归档到知识库',
-        type: '网页收藏',
-        wf: 'WF-10',
-        archive: '03-Knowledge/concepts/',
+        archive: '04-Resource/',
         planModel: 'glm',
         execModel: 'deepseek',
-        pathDetail: '资源来源: 目标网页 → 执行: 提取关键内容 → 归档: 03-Knowledge/'
+        pathDetail: '资源来源: 设计稿/需求 → 执行: 编码实现 → 归档: 04-Resource/'
     },
     {
         name: 'Model Chain Routing Test',
-        desc: '测试不同模型在不同任务上的响应质量和速度',
+        desc: '测试不同模型在不同任务上的响应质量和速度（技术调研）',
         type: '技术调研',
         wf: 'WF-12',
         archive: '03-Knowledge/comparisons/',
