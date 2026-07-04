@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hermes Agent · 工作流与模型编排</title>
+    <style>
+        /* ── Reset & Base ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #0b0d14;
+            color: #e2e4ea;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0b0d14; }
+        ::-webkit-scrollbar-thumb { background: #2a2d3a; border-radius: 3px; }
+
+        /* ── Navigation ── */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 100;
+            background: rgba(11, 13, 20, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid #1e2130;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            height: 56px;
+        }
+        nav .logo {
+            font-weight: 700;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #6c8cff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+        nav .logo span { color: #6c8cff; }
+        nav .links { margin-left: auto; display: flex; gap: 1.5rem; }
+        nav .links a {
+            color: #8891a8;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+            font-weight: 500;
+        }
+        nav .links a:hover { color: #c0c7db; }
+
+        /* ── Hero ── */
+        .hero {
+            padding: 120px 2rem 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(108, 140, 255, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 3.6rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.5rem;
+        }
+        .hero h1 .accent { background: linear-gradient(135deg, #6c8cff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero .tagline {
+            font-size: 1.15rem;
+            color: #8891a8;
+            max-width: 600px;
+            margin: 0.5rem auto 2rem;
+        }
+        .hero .badges { display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
+        .badge {
+            display: inline-flex; align-items: center;
+            padding: 0.3rem 0.9rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            border: 1px solid #1e2130;
+            background: #131621;
+            color: #8891a8;
+        }
+        .badge.purple { border-color: rgba(167, 139, 250, 0.3); color: #c4b5fd; }
+        .badge.blue { border-color: rgba(108, 140, 255, 0.3); color: #99b2ff; }
+        .badge.green { border-color: rgba(52, 211, 153, 0.3); color: #6ee7b7; }
+
+        /* ── Sections ── */
+        section { padding: 4rem 2rem; max-width: 1100px; margin: 0 auto; }
+        section h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        section h2 .emoji { font-size: 1.4rem; }
+        section h2::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, #1e2130, transparent);
+            margin-left: 0.5rem;
+        }
+
+        /* ── Architecture Diagram ── */
+        .arch-diagram {
+            background: #131621;
+            border: 1px solid #1e2130;
+            border-radius: 16px;
+            padding: 2rem;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre;
+            color: #a0a9c0;
+        }
+        .arch-diagram .hl-blue { color: #6c8cff; }
+        .arch-diagram .hl-purple { color: #a78bfa; }
+        .arch-diagram .hl-green { color: #34d399; }
+        .arch-diagram .hl-orange { color: #fbbf24; }
+        .arch-diagram .hl-red { color: #f87171; }
+
+        /* ── Model Chain ── */
+        .model-chain {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+        }
+        .model-card {
+            background: #131621;
+            border: 1px solid #1e2130;
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
+            text-align: center;
+            min-width: 140px;
+            transition: all 0.25s;
+        }
+        .model-card:hover { border-color: #2a2d3a; transform: translateY(-2px); }
+        .model-card .name { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.2rem; }
+        .model-card .role { font-size: 0.75rem; color: #6b7280; }
+        .model-card.primary { border-color: rgba(108, 140, 255, 0.4); }
+        .model-card.primary .name { color: #6c8cff; }
+        .model-card.code { border-color: rgba(167, 139, 250, 0.4); }
+        .model-card.code .name { color: #a78bfa; }
+        .model-card.fallback { border-color: rgba(52, 211, 153, 0.4); }
+        .model-card.fallback .name { color: #34d399; }
+        .model-card.free { border-color: rgba(251, 191, 36, 0.4); }
+        .model-card.free .name { color: #fbbf24; }
+        .model-arrow {
+            font-size: 1.4rem;
+            color: #2a2d3a;
+        }
+
+        /* ── Workflow Steps ── */
+        .steps { display: flex; flex-direction: column; gap: 2rem; margin: 2rem 0; }
+        .step-card {
+            display: flex;
+            gap: 1.2rem;
+            background: #131621;
+            border: 1px solid #1e2130;
+            border-radius: 14px;
+            padding: 1.5rem;
+            transition: border-color 0.2s;
+        }
+        .step-card:hover { border-color: #2a2d3a; }
+        .step-num {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #6c8cff20, #a78bfa20);
+            border: 1px solid #1e2130;
+            color: #c4b5fd;
+        }
+        .step-card h3 { font-size: 1.1rem; margin-bottom: 0.4rem; }
+        .step-card p { color: #7c839d; font-size: 0.9rem; }
+
+        /* ── Tool Grid ── */
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+        }
+        .tool-item {
+            background: #131621;
+            border: 1px solid #1e2130;
+            border-radius: 10px;
+            padding: 0.9rem 1rem;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .tool-item:hover { border-color: #2a2d3a; }
+        .tool-item .tool-name { font-weight: 600; color: #c0c7db; }
+        .tool-item .tool-desc { color: #6b7280; font-size: 0.75rem; margin-top: 0.15rem; }
+
+        /* ── Table ── */
+        .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th, td {
+            padding: 0.7rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #1e2130;
+        }
+        th {
+            font-weight: 600;
+            color: #8891a8;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        td { color: #c0c7db; }
+        tr:hover td { background: #131621; }
+
+        /* ── Stats ── */
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 2rem 0; }
+        .stat-card {
+            background: #131621;
+            border: 1px solid #1e2130;
+            border-radius: 14px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .stat-card .num {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6c8cff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-card .label { color: #6b7280; font-size: 0.8rem; margin-top: 0.3rem; }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #4a4d5e;
+            font-size: 0.8rem;
+            border-top: 1px solid #1e2130;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            nav .links { display: none; }
+            section { padding: 2rem 1rem; }
+            .model-chain { flex-direction: column; }
+            .model-arrow { transform: rotate(90deg); }
+            .step-card { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">✦ Hermes Agent</div>
+        <div class="links">
+            <a href="#workflow">工作流</a>
+            <a href="#models">模型编排</a>
+            <a href="#tools">工具集</a>
+            <a href="#knowledge">知识管理</a>
+        </div>
+    </nav>
+
+    <!-- ════ Hero ════ -->
+    <header class="hero">
+        <h1><span class="accent">Hermes Agent</span> 工作流体系</h1>
+        <p class="tagline">一个多模型驱动、工具丰富的 AI 智能体 —— 从聊天到编码、从搜索到桌面操控，一套体系全覆盖。</p>
+        <div class="badges">
+            <span class="badge purple">✦ 4 步闭环</span>
+            <span class="badge blue">⚡ 4 级模型链</span>
+            <span class="badge green">🛠 30+ 工具</span>
+            <span class="badge">🧠 知识沉淀</span>
+            <span class="badge purple">📡 GitHub 同步</span>
+        </div>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="num">11</div>
+                <div class="label">标准化工作流</div>
+            </div>
+            <div class="stat-card">
+                <div class="num">4</div>
+                <div class="label">模型编排层级</div>
+            </div>
+            <div class="stat-card">
+                <div class="num">30+</div>
+                <div class="label">内置工具</div>
+            </div>
+            <div class="stat-card">
+                <div class="num">158</div>
+                <div class="label">代码解析语言</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ════ Architecture ════ -->
+    <section>
+        <h2><span class="emoji">📐</span> 整体架构</h2>
+        <div class="arch-diagram">┌──────────────────────────────────────────────────┐
+│              用户输入 · User Request               │
+└──────────────────┬───────────────────────────────┘
+                   │
+┌──────────────────▼───────────────────────────────┐
+│         <span class="hl-blue">SOUL.md · 工作流路由</span>                         │
+│  ┌─────────────────────────────────────────────┐ │
+│  │ 收到任务 → 匹配工作流 → 选择模型 → 分配工具  │ │
+│  └─────────────────────────────────────────────┘ │
+└──────────────────┬───────────────────────────────┘
+                   │
+┌──────────────────▼───────────────────────────────┐
+│         <span class="hl-purple">模型链 · Model Chain</span>                        │
+│                                                   │
+│   <span class="hl-blue">┌─────────┐</span>     <span class="hl-purple">┌──────────┐</span>    <span class="hl-green">┌────────┐</span>         │
+│   │  mimo   │ ──→ │ deepseek │ ──→ │  glm   │ ──→ …  │
+│   │ (主模型) │     │ (编码)   │     │ (兜底)  │         │
+│   └─────────┘     └──────────┘     └────────┘         │
+│                            <span class="hl-orange">┌──────────────┐</span>            │
+│                            │ siliconflow │            │
+│                            │ (免费备选池) │            │
+│                            └──────────────┘            │
+└──────────────────┬───────────────────────────────┘
+                   │
+┌──────────────────▼───────────────────────────────┐
+│         <span class="hl-green">工具层 · Tool Layer</span>                          │
+│  ┌─────────┐ ┌─────────┐ ┌────────┐ ┌────────┐ │
+│  │Terminal │ │ Browser │ │  File  │ │  Web   │ │
+│  │ 终端    │ │ 浏览器  │ │ 文件   │ │ 搜索   │ │
+│  └─────────┘ └─────────┘ └────────┘ └────────┘ │
+│  ┌─────────┐ ┌─────────┐ ┌────────┐ ┌────────┐ │
+│  │Computer │ │  Cron   │ │  Git   │ │ Vision │ │
+│  │ 桌面    │ │ 定时    │ │ 代码   │ │ 视觉   │ │
+│  └─────────┘ └─────────┘ └────────┘ └────────┘ │
+│  ┌─────────┐ ┌─────────┐ ┌───────────────────┐ │
+│  │Delegate │ │ Memory  │ │ Codebase-Memory   │ │
+│  │ 子代理  │ │ 记忆    │ │ 代码索引(158语言) │ │
+│  └─────────┘ └─────────┘ └───────────────────┘ │
+└──────────────────┬───────────────────────────────┘
+                   │
+┌──────────────────▼───────────────────────────────┐
+│     <span class="hl-blue">沉淀层 · Knowledge Layer</span>                        │
+│                                                   │
+│   Obsidian 知识库 ──→ Git ──→ GitHub             │
+│   六段式目录 · 双链笔记 · 自动同步                │
+└───────────────────────────────────────────────────┘</div>
+    </section>
+
+    <!-- ════ Workflow ════ -->
+    <section id="workflow">
+        <h2><span class="emoji">🔄</span> 四步闭环工作流</h2>
+        <p style="color:#7c839d; margin-bottom:1.5rem;">每次任务都经过这四个阶段，确保可追溯、可沉淀、可复用。</p>
+        <div class="steps">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <div>
+                    <h3>匹配模板与路径</h3>
+                    <p>查阅标准化工作流表，匹配任务类型 → 获取来源文件、输出模板、归档路径。不凭空创造，而是复用已有流程。</p>
+                </div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <div>
+                    <h3>按流程执行</h3>
+                    <p>严格遵循既定步骤。遇到问题先查知识库（03-Knowledge），再查外部资源。社交平台搜索优先使用 autocli / bb-browser。</p>
+                </div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <div>
+                    <h3>分层沉淀</h3>
+                    <p>产出按三级沉淀：主页 ← 精简简介 → 工作流详情 ← 完整流程细则 → 日志/归档 ← 执行记录。知识是累积的，不是临时的。</p>
+                </div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">4</div>
+                <div>
+                    <h3>记忆固化</h3>
+                    <p>新工作流、用户偏好、环境配置写入长期记忆。后续任务自动匹配既定规则，无需用户重复说明。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════ Models ════ -->
+    <section id="models">
+        <h2><span class="emoji">🧠</span> 模型编排策略</h2>
+
+        <h3 style="font-size:1rem; color:#8891a8; margin-bottom:0.5rem;">模型链（优先级降序）</h3>
+        <div class="model-chain">
+            <div class="model-card primary">
+                <div class="name">mimo</div>
+                <div class="role">🎯 主模型 · 通用对话</div>
+            </div>
+            <div class="model-arrow">→</div>
+            <div class="model-card code">
+                <div class="name">deepseek</div>
+                <div class="role">⚡ 编码 · 复杂推理</div>
+            </div>
+            <div class="model-arrow">→</div>
+            <div class="model-card fallback">
+                <div class="name">glm</div>
+                <div class="role">🆓 免费兜底</div>
+            </div>
+            <div class="model-arrow">→</div>
+            <div class="model-card free">
+                <div class="name">siliconflow</div>
+                <div class="role">📦 免费备选池</div>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>任务类型</th>
+                        <th>首选模型</th>
+                        <th>备选</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>日常对话 / 写作</td><td style="color:#6c8cff">mimo</td><td>deepseek</td><td>低延迟优先</td></tr>
+                    <tr><td>编码 / 调试</td><td style="color:#a78bfa">deepseek</td><td>Cursor CLI</td><td>强推理优先</td></tr>
+                    <tr><td>知识问答</td><td style="color:#a78bfa">deepseek</td><td>glm</td><td>准确度优先</td></tr>
+                    <tr><td>轻量任务</td><td style="color:#34d399">glm-4-flash</td><td>siliconflow</td><td>免费模型撑</td></tr>
+                    <tr><td>困难任务</td><td>Cursor CLI</td><td>deepseek</td><td>委托外部工具</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 style="font-size:1rem; color:#8891a8; margin:2rem 0 0.5rem;">子任务委派（Delegate）</h3>
+        <div class="model-chain" style="gap:2rem;">
+            <div style="background:#131621; border:1px solid #fbbf2440; border-radius:10px; padding:0.8rem 1.2rem; text-align:center;">
+                <div style="color:#fbbf24; font-weight:700; font-size:0.9rem;">简单</div>
+                <div style="color:#6b7280; font-size:0.75rem;">delegate_task(glm-4-flash)</div>
+                <div style="color:#4a4d5e; font-size:0.7rem;">免费 · 快速</div>
+            </div>
+            <div style="background:#131621; border:1px solid #a78bfa40; border-radius:10px; padding:0.8rem 1.2rem; text-align:center;">
+                <div style="color:#a78bfa; font-weight:700; font-size:0.9rem;">中等</div>
+                <div style="color:#6b7280; font-size:0.75rem;">delegate_task(deepseek)</div>
+                <div style="color:#4a4d5e; font-size:0.7rem;">平衡性价比</div>
+            </div>
+            <div style="background:#131621; border:1px solid #6c8cff40; border-radius:10px; padding:0.8rem 1.2rem; text-align:center;">
+                <div style="color:#6c8cff; font-weight:700; font-size:0.9rem;">复杂</div>
+                <div style="color:#6b7280; font-size:0.75rem;">delegate_task(mimo)</div>
+                <div style="color:#4a4d5e; font-size:0.7rem;">最强推理</div>
+            </div>
+        </div>
+        <p style="color:#4a4d5e; font-size:0.8rem; margin-top:0.5rem;">支持最大 3 路并行 · 嵌套深度 1 层 · 结果异步返回不阻塞</p>
+    </section>
+
+    <!-- ════ Tools ════ -->
+    <section id="tools">
+        <h2><span class="emoji">🛠</span> 核心工具集</h2>
+        <div class="tool-grid">
+            <div class="tool-item"><div class="tool-name">terminal</div><div class="tool-desc">Shell 执行 · 前台/后台/PTY</div></div>
+            <div class="tool-item"><div class="tool-name">process</div><div class="tool-desc">后台进程管理</div></div>
+            <div class="tool-item"><div class="tool-name">computer_use</div><div class="tool-desc">桌面后台操控</div></div>
+            <div class="tool-item"><div class="tool-name">browser_*</div><div class="tool-desc">浏览器交互</div></div>
+            <div class="tool-item"><div class="tool-name">web_search</div><div class="tool-desc">通用网页搜索</div></div>
+            <div class="tool-item"><div class="tool-name">autocli</div><div class="tool-desc">55+ 社交平台</div></div>
+            <div class="tool-item"><div class="tool-name">bb-browser</div><div class="tool-desc">37+ 网站爬虫</div></div>
+            <div class="tool-item"><div class="tool-name">read_file / write_file</div><div class="tool-desc">文件读写</div></div>
+            <div class="tool-item"><div class="tool-name">patch</div><div class="tool-desc">智能编辑（模糊匹配）</div></div>
+            <div class="tool-item"><div class="tool-name">search_files</div><div class="tool-desc">全文/文件名搜索</div></div>
+            <div class="tool-item"><div class="tool-name">delegate_task</div><div class="tool-desc">子代理委派（3路并行）</div></div>
+            <div class="tool-item"><div class="tool-name">memory</div><div class="tool-desc">跨会话持久记忆</div></div>
+            <div class="tool-item"><div class="tool-name">cronjob</div><div class="tool-desc">定时任务调度</div></div>
+            <div class="tool-item"><div class="tool-name">skill_manage</div><div class="tool-desc">可复用流程</div></div>
+            <div class="tool-item"><div class="tool-name">codebase-memory</div><div class="tool-desc">代码索引（158语言）</div></div>
+            <div class="tool-item"><div class="tool-name">vision_analyze</div><div class="tool-desc">图像视觉分析</div></div>
+        </div>
+    </section>
+
+    <!-- ════ Knowledge ════ -->
+    <section id="knowledge">
+        <h2><span class="emoji">📖</span> 知识管理体系</h2>
+        <div style="display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:2rem;">
+            <div style="background:#131621; border:1px solid #1e2130; border-radius:10px; padding:1.2rem; flex:1; min-width:120px;">
+                <div style="font-size:0.8rem; color:#6b7280;">📥 收件箱</div>
+                <div style="font-weight:700; color:#6c8cff;">00-Inbox</div>
+            </div>
+            <div style="background:#131621; border:1px solid #1e2130; border-radius:10px; padding:1.2rem; flex:1; min-width:120px;">
+                <div style="font-size:0.8rem; color:#6b7280;">📅 每日日志</div>
+                <div style="font-weight:700; color:#a78bfa;">01-Daily</div>
+            </div>
+            <div style="background:#131621; border:1px solid #1e2130; border-radius:10px; padding:1.2rem; flex:1; min-width:120px;">
+                <div style="font-size:0.8rem; color:#6b7280;">🎯 项目库</div>
+                <div style="font-weight:700; color:#34d399;">02-Project</div>
+            </div>
+            <div style="background:#131621; border:1px solid #1e2130; border-radius:10px; padding:1.2rem; flex:1; min-width:120px;">
+                <div style="font-size:0.8rem; color:#6b7280;">📚 知识库</div>
+                <div style="font-weight:700; color:#fbbf24;">03-Knowledge</div>
+            </div>
+            <div style="background:#131621; border:1px solid #1e2130; border-radius:10px; padding:1.2rem; flex:1; min-width:120px;">
+                <div style="font-size:0.8rem; color:#6b7280;">🔧 资源库</div>
+                <div style="font-weight:700; color:#f87171;">04-Resource</div>
+            </div>
+        </div>
+        <div style="background:#131621; border:1px solid #1e2130; border-radius:12px; padding:1rem 1.5rem;">
+            <div style="text-align:center; color:#8891a8; font-family:monospace; font-size:0.9rem;">
+                捕捉 → 处理 → 沉淀 → 复盘<br>
+                <span style="color:#4a4d5e;">00-Inbox → 01-Daily → 03-Knowledge → 01-Daily</span>
+            </div>
+        </div>
+        <p style="color:#4a4d5e; font-size:0.8rem; text-align:center; margin-top:1.5rem;">
+            公开内容自动同步 GitHub · 隐私内容（00-Inbox / 98-Archive）不推送
+        </p>
+    </section>
+
+    <!-- ════ Safety ════ -->
+    <section>
+        <h2><span class="emoji">🔒</span> 安全与限速</h2>
+        <div class="tool-grid" style="grid-template-columns:1fr 1fr;">
+            <div class="tool-item">
+                <div class="tool-name">社交平台限速</div>
+                <div class="tool-desc">≤1次/秒，防反爬封号</div>
+            </div>
+            <div class="tool-item">
+                <div class="tool-name">单次结果上限</div>
+                <div class="tool-desc">≤10条，防上下文膨胀</div>
+            </div>
+            <div class="tool-item">
+                <div class="tool-name">权限拒绝</div>
+                <div class="tool-desc">不点弹窗、不输密码、不点支付</div>
+            </div>
+            <div class="tool-item">
+                <div class="tool-name">桌面安全</div>
+                <div class="tool-desc">不抢夺光标、不操作隐私对话框</div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>Powered by <strong>Hermes Agent</strong> · 由 Nous Research 开发</p>
+        <p style="margin-top:0.3rem;">知识库同步 GitHub · 持续迭代维护</p>
+    </footer>
+
+</body>
+</html>

@@ -68,3 +68,4 @@ tags: [index, home]
 - [[SCHEMA|📋 Schema]] — 知识库规范
 - [[log|📝 操作日志]] — 变更记录
 - [[03-Knowledge/workflows|🔄 标准化工作流]] — 10个工作流体系
+- [[03-Knowledge/concepts/【AI工程】Hermes-Agent工作流与模型编排|🤖 Hermes Agent 工作流与模型编排]] — 全栈模型编排与工具体系
