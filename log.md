@@ -52,3 +52,9 @@
 - 7章完整内容：系统配置/Obsidian结构/4维度表/Frontmatter规范/记忆规则/[github_forbid]/一键配置步骤
 - 适用于所有 Agent 客户端（Hermes/Cursor/Claude Code/Codex）
 - 主页.md 快速链接已更新
+
+## [2026-07-04] refactor | 模型编排升级v3.0 + 建立方案
+- 模型编排升级为三层架构：主模型规划 → MoA/delegate/混合 → 执行聚合
+- 创建 03-Knowledge/concepts/【系统】Hermes-Agent模型编排建立方案.md
+- 9章完整内容：理解编排/模型画像/MoA配置/delegate模式/混合模式/决策逻辑/SOUL写入/验证/维护
+- 主页.md 快速链接已更新
