@@ -59,9 +59,10 @@
 - 9章完整内容：理解编排/模型画像/MoA配置/delegate模式/混合模式/决策逻辑/SOUL写入/验证/维护
 - 主页.md 快速链接已更新
 
-## [2026-07-04] archive | 三层编排会话归档（MoA+delegate）
-- 按WF-12三层架构执行会话归档
-- 第一层：主模型分析10个会话，决定编排策略
-- 第二层A：delegate并行压缩Cron会话（2个子代理，5.72s）
-- 第二层B：MoA deep分析丰富会话（2个子代理，138s）
-- 第三层：聚合生成 98-Archive/会话归档/2026-07-04-会话归档汇总.md
+## [2026-07-04] archive | MoA会话归档（真实MoA调用）
+- 使用 hermes chat --provider moa 调用MoA
+- MoA deep: DeepSeek+Mimo分析丰富会话（Obsidian关联确认）
+- MoA lightweight: GLM+DeepSeek压缩Cron会话（8次网关巡检+3次终端检查）
+- 主模型直接处理4个中等会话
+- 聚合生成 98-Archive/会话归档/2026-07-04-会话归档汇总.md
+- 验证：hermes chat --provider moa -q "prompt" -Q 可用
