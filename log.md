@@ -33,10 +33,16 @@
 - 10种预设任务覆盖全部12个WF工作流
 
 ## [2026-07-04] update | 4维度重构 + [github_forbid] 规则
-- 工作流表从6列精简为4维度：名称 | 类型 | 归档 | GitHub
+- 工作流表从6列精简为4维度：名称|类型|归档|GitHub
 - 修正：每日日志→❌不推送，月度复盘→❌不推送，GitHub同步→按需
 - 新增 SCHEMA.md 4维度 Frontmatter 强制规范（workflow/archive/github/privacy）
 - 新增 `.gitignore` 规则 `[github_forbid]*` 自动忽略不归档文件
 - 新增 workflows.md [github_forbid] 文件命名规则章节
-- 现有知识笔记全部添加4维度 Frontmatter
 - Workflow Commander 同步：12个任务全部含 pushGitHub/archiveNeeded 字段
+
+## [2026-07-04] refactor | 分层架构重构：SOUL.md/主页.md/工作流详情
+- SOUL.md 精简为入口规则+模型编排概要（不含工作流细节）
+- 主页.md 增加4维度表+每个WF链接到Obsidian详细执行文件
+- 创建 04-Resource/工作流/WF-01~12 共12个工作流详情文档
+- 执行流程变为：查主页.md→打开详细文件→按文件内容执行
+- 记忆固化更新，工作流细节不在记忆中重复存储
