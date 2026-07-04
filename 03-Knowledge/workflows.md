@@ -124,21 +124,24 @@ siliconflow (免费备选池)
 
 ### 任务-模型映射表
 
-| 任务类型 | 首选模型 | 备选 | 说明 |
-|----------|----------|------|------|
-| 日常对话/写作 | mimo | deepseek | 低延迟优先 |
-| 编码/调试 | deepseek | Cursor CLI | 强推理优先 |
-| 知识问答 | deepseek | glm | 准确度优先 |
-| 轻量任务 | glm-4-flash | siliconflow | 免费撑 |
-| 困难任务 | Cursor CLI | deepseek | 委托外部工具 |
+| 任务类型 | 难度 | 首选模型 | 备选 | 实际任务举例 |
+|----------|------|----------|------|-------------|
+| 日常对话/写作 | 轻量 | **mimo** | deepseek | 日常交流、快速问询 |
+| **轻量任务** | 轻量 | **glm-4-flash** | siliconflow | 文件压缩/解压、方案规划（简单日程/步骤）、文档搜索/信息检索、文本格式化（JSON/MD互转）、简单文件读写、网页内容提取收藏 |
+| 知识问答/技术调研 | 中等 | **deepseek** | glm | 技术调研总结、框架对比、API文档查阅 |
+| 系统诊断 | 中等 | **deepseek** | glm | 进程排查、资源分析、日志审计 |
+| 模型/工具配置 | 中等 | **deepseek** | mimo | SOUL.md配置、config.yaml编辑、cron配置 |
+| 编码/调试 | 中等 | **deepseek** | Cursor CLI | bug修复、脚本开发、Git操作 |
+| UI/前端开发 | 中等→困难 | **deepseek** | Cursor CLI | HTML/CSS/JS页面、交互式应用 |
+| 困难任务 | 困难 | **Cursor CLI** | deepseek | 多文件重构、复杂debug（依赖兼容/底层排错）、架构设计 |
 
 ### 子代理委派规则
 
-| 难度 | 委派目标 | 场景 |
-|------|----------|------|
-| 简单 | delegate_task(glm-4-flash) | 分类、提取、格式化 |
-| 中等 | delegate_task(deepseek) | 代码审查、数据分析 |
-| 复杂 | delegate_task(mimo) | 架构设计、逻辑推理 |
+| 难度 | 委派目标 | 典型场景 |
+|------|----------|----------|
+| **轻量** | `delegate_task(glm-4-flash)` | 文件压缩/解压、简单方案规划（日程编排）、文档搜索/信息检索、文本格式转换（JSON/MD互转）、简单文件编辑、网页内容提取、日常问答分类 |
+| **中等** | `delegate_task(deepseek)` | 代码审查与bug修复、技术调研总结、系统诊断（进程/资源分析）、配置编辑（SOUL.md/config.yaml）、Git操作、独立页面开发 |
+| **复杂** | `delegate_task(mimo)` | 多文件/多模块协作、复杂交互式应用开发、架构设计与重构、依赖兼容/底层排错 |
 
 - 最大 3 路并行
 - 嵌套深度限制 1 层
@@ -148,10 +151,25 @@ siliconflow (免费备选池)
 
 ```
 任务到来
-├── 需要编码/调试？ → deepseek
-├── 需要强推理/架构？ → deepseek → Cursor CLI
-├── 轻量分类/格式化？ → glm-4-flash (免费)
-├── 日常对话/写作？ → mimo (主模型)
+├── 日常对话/简单写作？ → mimo
+├── 轻量任务？
+│   ├── 文件压缩/解压？ → glm-4-flash (免费)
+│   ├── 方案规划(日程/步骤)？ → glm-4-flash (免费)
+│   ├── 文档搜索/信息检索？ → glm-4-flash (免费)
+│   ├── 文本格式化(JSON/MD)？ → glm-4-flash (免费)
+│   └── 网页内容提取收藏？ → glm-4-flash (免费)
+├── 中等任务？
+│   ├── 技术调研/知识问答？ → deepseek
+│   ├── 系统诊断(进程/资源)？ → deepseek
+│   ├── 配置编辑(Soul.md/cron)？ → deepseek
+│   └── 代码调试/脚本开发？ → deepseek
+├── 编码/UI开发？
+│   ├── 简单页面(HTML/CSS/JS)？ → deepseek
+│   └── 复杂交互式应用？ → deepseek → Cursor CLI
+├── 困难任务？
+│   ├── 多文件重构？ → Cursor CLI
+│   ├── 复杂debug(依赖兼容)？ → Cursor CLI
+│   └── 架构设计？ → deepseek → Cursor CLI
 └── 以上都不可用？ → siliconflow 备选池兜底
 ```
 
