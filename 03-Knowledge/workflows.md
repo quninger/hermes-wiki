@@ -63,15 +63,15 @@ tags: [workflow, 核心, 系统]
 | 工作流 | 模板路径 | 归档路径 | 推送范围 |
 |--------|----------|----------|----------|
 | 每日日志 | `04-Resource/templates/daily-template.md` | `01-Daily/` | `01-Daily/`, `03-Knowledge/` |
-| 收件箱处理 | 无固定模板 | `00-Inbox/` → 各目录 | ❌ 不推送 |
+| 收件箱处理 | `04-Resource/templates/inbox-template.md` | `00-Inbox/` → 各目录 | ❌ 不推送 |
 | 知识沉淀 | `04-Resource/templates/knowledge-template.md` | `03-Knowledge/` | `03-Knowledge/` |
 | 项目管理 | `04-Resource/templates/project-template.md` | `02-Project/` | `02-Project/` |
-| 会话归档 | 无固定模板 | `98-Archive/` | ❌ 不推送 |
-| 月度复盘 | 无固定模板 | `01-Daily/` | `01-Daily/` |
+| 会话归档 | `04-Resource/templates/archive-template.md` | `98-Archive/` | ❌ 不推送 |
+| 月度复盘 | `04-Resource/templates/monthly-template.md` | `01-Daily/` | `01-Daily/` |
 | GitHub 同步 | 无 | 无 | 全部 |
 | 求职准备 | 无固定模板 | `02-Project/求职/` | ❌ 不推送 |
 | 技术调研 | `04-Resource/templates/knowledge-template.md` | `03-Knowledge/` | `03-Knowledge/` |
-| 网页收藏 | 无固定模板 | `00-Inbox/` → `03-Knowledge/` | `03-Knowledge/` |
+| 网页收藏 | `04-Resource/templates/webclip-template.md` | `00-Inbox/` → `03-Knowledge/` | `03-Knowledge/` |
 
 ---
 
